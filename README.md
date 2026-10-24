@@ -2,34 +2,57 @@
 
 **Masmorra is a portrait action game about gesture-based combat, with strong roguelite influences.**
 
-The project is in development and built with Godot 4.7. It uses a **720 × 1280 portrait viewport**. Gameplay and interface text are in Portuguese.
+![Godot 4.7](https://img.shields.io/badge/Godot-4.7-478CBF?logo=godot-engine&logoColor=white)
+![Status: in development](https://img.shields.io/badge/status-in%20development-orange)
+![Portrait viewport](https://img.shields.io/badge/viewport-720%C3%971280-555)
+![Game text: Portuguese](https://img.shields.io/badge/game%20text-Portuguese-009739)
+
+The project is built with Godot 4.7. Gameplay and interface text are in Portuguese.
+
+> **Project status:** in development. Features and balance may change.
+
+<details>
+<summary>Contents</summary>
+
+- [Game systems](#game-systems)
+- [Getting started](#getting-started)
+- [How a run works](#how-a-run-works)
+- [Project map](#project-map)
+- [Code entry points](#code-entry-points)
+- [Code conventions](#code-conventions)
+- [Tests](#tests)
+
+</details>
+
+---
 
 ## Game systems
 
-- **Input:** touch strokes control movement and trigger equipped actions.
-- **Rooms:** selected room libraries supply pieces for connected, assembled rooms.
-- **Encounters:** enemies spawn in each room. The number of enemies increases as the run progresses.
-- **Rewards:** after the encounter, exits unlock. Each exit has a separate upgrade, health, or stamina reward.
-- **Upgrades:** passive upgrades persist between rooms and gain a level when collected again.
-- **Enemies:** current types are the purple-head dash attacker and the triangular route obstacle.
-- **Interface:** health and stamina bars, minimap, reward indicators, and upgrade backpack.
+| System | Current behavior |
+| --- | --- |
+| Input | Touch strokes control movement and trigger equipped actions. |
+| Rooms | Selected room libraries supply pieces for connected, assembled rooms. |
+| Encounters | Enemies spawn in each room; their number increases as the run progresses. |
+| Rewards | After the encounter, exits unlock. Each exit offers a separate upgrade, health, or stamina reward. |
+| Upgrades | Passive upgrades persist between rooms and gain a level when collected again. |
+| Enemies | Current types are the purple-head dash attacker and the triangular route obstacle. |
+| Interface | Health and stamina bars, minimap, reward indicators, and upgrade backpack. |
 
 ## Getting started
 
-1. Install **Godot 4.7**.
-2. Clone or download this repository.
-3. In Godot's Project Manager, choose **Import** and select the repository's `project.godot` file.
-4. Open the project and run the main scene with **F6**, or run the project with **F5**.
+1. Install **Godot 4.7** and clone or download this repository.
+2. In Godot's Project Manager, choose **Import** and select `project.godot`.
+3. Open the project. Press **F6** to run the main scene, or **F5** to run the project.
 
-The project uses portrait orientation and touch input. Keyboard movement actions are defined in `project.godot`. Player-facing text is in Portuguese.
+> The project uses portrait orientation with a **720 × 1280** base viewport. Touch input is supported. Keyboard movement actions are defined in `project.godot` for development.
 
 ## How a run works
 
-1. **Configure the room pool.** In the start menu, select which room libraries are enabled. The selection is saved locally between runs.
-2. **Generate a room.** The assembler combines pieces from the enabled libraries. The room is built with a player spawn, enemy spawn points, and exits.
-3. **Complete the encounter.** Exits remain locked until all enemies in the room are defeated. The number of enemies increases in later rooms.
-4. **Choose an exit.** Each unlocked exit displays its own reward: an upgrade, health, or stamina. Reward indicators point toward the corresponding doors. Tapping an indicator moves the player in front of its door; entering the door selects that reward.
-5. **Continue or end the run.** The next room is generated and the selected reward is granted. The player's upgrades persist and can gain levels when collected again. The run ends when the player's health reaches zero.
+1. **Configure the room pool** in the start menu. The enabled room libraries are saved locally between runs.
+2. **Generate and enter a room.** The assembler combines pieces from the enabled libraries and builds a room with a player spawn, enemy spawn points, and exits.
+3. **Complete the encounter.** Exits remain locked until every enemy is defeated. Enemy counts increase in later rooms.
+4. **Select a reward.** Each unlocked exit displays its own upgrade, health, or stamina reward. Indicators point toward the doors. Tapping an indicator moves the player in front of that door; entering it selects the reward.
+5. **Continue the run.** The next room is generated and the selected reward is granted. Upgrades persist and gain levels when collected again. The run ends when the player's health reaches zero.
 
 ```mermaid
 flowchart TD
@@ -43,7 +66,12 @@ flowchart TD
     G -- No --> H[Run ends]
 ```
 
+<details>
+<summary>Room assembly details</summary>
+
 `PieceAssembler` loads enabled libraries. Shared rules validate pieces and entry seeds, assemble a connected layout, and pass it to `GeneratedRoom` for construction.
+
+</details>
 
 ## Project map
 
@@ -70,11 +98,11 @@ flowchart TD
 
 ## Code conventions
 
-- Write code, identifiers, and code comments in **English**.
-- Keep player-facing text in **Portuguese**.
-- Keep gesture recognition, movement, and ability behavior in separate components.
-- Keep upgrades modular so they can be equipped, leveled, and removed at runtime.
-- Put prototype starting loadouts and tuning values in scene configuration or the Inspector where practical.
+> **Language:** code, identifiers, and code comments are in English. Player-facing text is in Portuguese.
+
+- Gesture recognition, movement, and ability behavior belong in separate components.
+- Upgrades are modular and can be equipped, leveled, and removed at runtime.
+- Prototype starting loadouts and tuning values are configured in scenes or the Inspector where practical.
 
 ## Tests
 
@@ -84,4 +112,4 @@ The `tests/` directory contains individual Godot scripts, including `test_contro
 godot --headless --path . --script res://tests/test_generation.gd
 ```
 
-Replace the script path to run a different test.
+Replace the script path to run another test.
