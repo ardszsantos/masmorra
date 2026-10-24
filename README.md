@@ -1,21 +1,18 @@
 # Masmorra
 
-> A portrait action game about gesture-based combat, assembled dungeon rooms, and building a stronger character one reward at a time.
+**Masmorra is a portrait action game about gesture-based combat, with strong roguelite influences.**
 
-![Godot 4.7](https://img.shields.io/badge/Godot-4.7-478CBF?logo=godot-engine&logoColor=white)
-![Status](https://img.shields.io/badge/status-in%20development-orange)
-![Language](https://img.shields.io/badge/game%20text-Portuguese-009739)
+The project is in development and built with Godot 4.7. It uses a **720 × 1280 portrait viewport**. Gameplay and interface text are in Portuguese.
 
-Masmorra is an active prototype. Its main scene combines touch gestures, room-piece assembly, escalating enemy encounters, and passive upgrades that persist throughout a run. The project targets a **720 × 1280 portrait viewport**.
+## Game systems
 
-## What is in the game
-
-- **Gesture controls:** draw strokes on the screen to move and trigger equipped actions.
-- **Room runs:** choose room libraries, clear encounters, and travel through connected exits.
-- **Reward choices:** each unlocked exit offers a different upgrade or a health or stamina boost.
-- **Passive builds:** upgrades can level up when collected again and remain equipped between rooms.
-- **Enemy prototypes:** fight the purple-head dash attacker and the triangular route obstacle.
-- **Mobile-focused HUD:** health, stamina, minimap, reward direction indicators, and an upgrade backpack.
+- **Input:** touch strokes control movement and trigger equipped actions.
+- **Rooms:** selected room libraries supply pieces for connected, assembled rooms.
+- **Encounters:** enemies spawn in each room. The number of enemies increases as the run progresses.
+- **Rewards:** after the encounter, exits unlock. Each exit has a separate upgrade, health, or stamina reward.
+- **Upgrades:** passive upgrades persist between rooms and gain a level when collected again.
+- **Enemies:** current types are the purple-head dash attacker and the triangular route obstacle.
+- **Interface:** health and stamina bars, minimap, reward indicators, and upgrade backpack.
 
 ## Getting started
 
@@ -24,20 +21,29 @@ Masmorra is an active prototype. Its main scene combines touch gestures, room-pi
 3. In Godot's Project Manager, choose **Import** and select the repository's `project.godot` file.
 4. Open the project and run the main scene with **F6**, or run the project with **F5**.
 
-The game is designed for portrait play and touch input. Keyboard movement actions are also defined in `project.godot` for development. Menus and other player-facing text are in Portuguese.
+The project uses portrait orientation and touch input. Keyboard movement actions are defined in `project.godot`. Player-facing text is in Portuguese.
 
-## How a run fits together
+## How a run works
+
+1. **Configure the room pool.** In the start menu, select which room libraries are enabled. The selection is saved locally between runs.
+2. **Generate a room.** The assembler combines pieces from the enabled libraries. The room is built with a player spawn, enemy spawn points, and exits.
+3. **Complete the encounter.** Exits remain locked until all enemies in the room are defeated. The number of enemies increases in later rooms.
+4. **Choose an exit.** Each unlocked exit displays its own reward: an upgrade, health, or stamina. Reward indicators point toward the corresponding doors. Tapping an indicator moves the player in front of its door; entering the door selects that reward.
+5. **Continue or end the run.** The next room is generated and the selected reward is granted. The player's upgrades persist and can gain levels when collected again. The run ends when the player's health reaches zero.
 
 ```mermaid
-flowchart LR
-    A[Choose room libraries] --> B[Assemble a room]
-    B --> C[Clear the encounter]
-    C --> D[Choose an exit reward]
-    D --> E[Keep or level up an upgrade]
-    E --> B
+flowchart TD
+    A[Choose room libraries] --> B[Assemble and enter a room]
+    B --> C[Defeat all enemies]
+    C --> D[Exits unlock with separate rewards]
+    D --> E[Reach a reward door]
+    E --> F[Enter door and receive its reward]
+    F --> G{Player alive?}
+    G -- Yes --> B
+    G -- No --> H[Run ends]
 ```
 
-Room libraries are loaded by `PieceAssembler`. The shared rules prepare valid pieces and seeds, assemble a connected layout, and pass it to `GeneratedRoom` to create floors, walls, spawn points, and exits. The selected library list is saved locally between runs.
+`PieceAssembler` loads enabled libraries. Shared rules validate pieces and entry seeds, assemble a connected layout, and pass it to `GeneratedRoom` for construction.
 
 ## Project map
 
@@ -55,12 +61,12 @@ Room libraries are loaded by `PieceAssembler`. The shared rules prepare valid pi
 | `assets/` | Sprites, fonts, tiles, and upgrade icons. |
 | `tests/` | Godot scripts covering controls, gameplay, generation, and enemies. |
 
-### Where to make a change
+### Code entry points
 
-- **Add or tune a passive:** edit its script under `scripts/upgrades/`, its scene under `scenes/upgrades/`, and its reward resource under `resources/rewards/`.
-- **Change a gesture:** start in `scripts/input/`; action behavior belongs in `scripts/abilities/`.
-- **Change room assembly:** start with `scripts/gameplay/piece_assembler.gd` and `scripts/gameplay/piece_rules.gd`.
-- **Change a HUD element:** look in `scripts/ui/` and its corresponding scene or node in `scenes/main.tscn`.
+- **Upgrade:** its behavior is under `scripts/upgrades/`, its scene under `scenes/upgrades/`, and its reward data under `resources/rewards/`.
+- **Gesture recognition:** `scripts/input/`. Ability behavior: `scripts/abilities/`.
+- **Room assembly:** `scripts/gameplay/piece_assembler.gd` and `scripts/gameplay/piece_rules.gd`.
+- **HUD:** `scripts/ui/` and the corresponding nodes in `scenes/main.tscn`.
 
 ## Code conventions
 
@@ -72,10 +78,10 @@ Room libraries are loaded by `PieceAssembler`. The shared rules prepare valid pi
 
 ## Tests
 
-The `tests/` folder contains individual Godot scripts, including `test_controls.gd`, `test_gameplay.gd`, `test_generation.gd`, `test_survival_loop.gd`, and `test_triangular.gd`. Run the relevant script with Godot's headless mode from the project root, for example:
+The `tests/` directory contains individual Godot scripts, including `test_controls.gd`, `test_gameplay.gd`, `test_generation.gd`, `test_survival_loop.gd`, and `test_triangular.gd`. From the project root, run a script in headless mode:
 
 ```sh
 godot --headless --path . --script res://tests/test_generation.gd
 ```
 
-Replace the test path to run another suite. Tests are not launched automatically by the project.
+Replace the script path to run a different test.
