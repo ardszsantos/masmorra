@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/purple_head.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/gameplay/health.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/gameplay/hit_reaction.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/gameplay/contact_damage.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/gameplay/triangular_feedback.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/gameplay/freeze_status.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/ui/enemy_health_bar.gd" id="health_bar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/purple-head/idle.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/purple-head/pointing-down.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/purple-head/pointing-left.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/sprites/purple-head/pointing-right.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/sprites/purple-head/pointing-up.png" id="11"]
+
+[sub_resource type="SpriteFrames" id="Frames"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("7")}, {"duration": 1.0, "texture": ExtResource("8")}, {"duration": 1.0, "texture": ExtResource("9")}, {"duration": 1.0, "texture": ExtResource("10")}, {"duration": 1.0, "texture": ExtResource("11")}],
+"loop": false,
+"name": &"default",
+"speed": 1.0
+}]
+
+[sub_resource type="CircleShape2D" id="Body"]
+radius = 22.0
+
+[sub_resource type="Gradient" id="DashFade"]
+offsets = PackedFloat32Array(0, 0.25, 1)
+colors = PackedColorArray(0.7, 0.25, 0.65, 0.0, 0.7, 0.25, 0.65, 0.35, 0.5, 0.15, 0.5, 0.0)
+
+[node name="PurpleHead" type="CharacterBody2D"]
+collision_layer = 8
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1")
+speed = 420.0
+pursuit_speed = 115.0
+first_windup = 0.65
+followup_windup = 0.45
+recovery_duration = 1.1
+acceleration = 2200.0
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("Frames")
+
+[node name="DashParticles" type="CPUParticles2D" parent="."]
+z_index = -1
+emitting = false
+amount = 12
+lifetime = 0.3
+local_coords = false
+randomness = 0.35
+spread = 25.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 8.0
+initial_velocity_max = 22.0
+scale_amount_min = 2.0
+scale_amount_max = 3.5
+color_ramp = SubResource("DashFade")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("Body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2")
+maximum = 60.0
+
+[node name="HitReaction" type="Node" parent="."]
+script = ExtResource("3")
+stun_duration = 0.0
+knockback_speed = 0.0
+
+[node name="MeleeAttack" type="Node2D" parent="."]
+script = ExtResource("4")
+
+[node name="RouteFeedback" type="Node2D" parent="."]
+z_index = 1
+script = ExtResource("5")
+shake_amount = 1.5
+marker_color = Color(0.8, 0.2, 0.7, 0.9)
+trail_color = Color(0.8, 0.2, 0.7, 0.4)
+
+[node name="FreezeStatus" type="Node2D" parent="."]
+z_index = 3
+script = ExtResource("6")
+
+[node name="HealthBar" type="Node2D" parent="."]
+position = Vector2(0, -58)
+z_index = 5
+script = ExtResource("health_bar")

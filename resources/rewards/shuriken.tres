@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3 uid="uid://wbb03wsg4t47"]
+
+[ext_resource type="Script" uid="uid://rywpqrhde543" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/upgrades/shuriken.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://cimnqg33x8je" path="res://assets/sprites/item-upgrades/shuriken/shuriken-icon.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"shuriken"
+display_name = "Shuriken"
+world = "normal"
+icon = ExtResource("3")
+color = Color(0.85, 0.95, 1, 1)
+upgrade_scene = ExtResource("2")

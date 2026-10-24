@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3 uid="uid://cwj7sjojcped8"]
+
+[ext_resource type="Script" uid="uid://rywpqrhde543" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/upgrades/laser.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://bhm6n37htvywr" path="res://assets/sprites/item-upgrades/lazer-gun/lazer-gun-icon.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"laser"
+display_name = "Arma laser"
+world = "space"
+icon = ExtResource("3")
+color = Color(0.25, 0.9, 1, 1)
+upgrade_scene = ExtResource("2")

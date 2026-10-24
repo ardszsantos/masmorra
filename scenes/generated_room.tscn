@@ -1,0 +1,165 @@
+[gd_scene format=3 uid="uid://bk7awttniyf5d"]
+
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar0.png" id="1_oa06l"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileWallTop.png" id="2_s5wdn"]
+[ext_resource type="Script" uid="uid://cbroknpxsf3x3" path="res://scripts/gameplay/generated_room.gd" id="3_generator"]
+[ext_resource type="Script" uid="uid://b6kh2bjoo450d" path="res://scripts/gameplay/door.gd" id="4_vkqvv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/door.png" id="5_dogit"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar1.png" id="6_floor_var1"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileWallBottom.png" id="7_wall_bottom"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileWallLeft.png" id="8_wall_left"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileWallRight.png" id="9_wall_right"]
+
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar2.png" id="floor_var2"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar3.png" id="floor_var3"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar4.png" id="floor_var4"]
+[ext_resource type="Texture2D" path="res://assets/tiles/tileFloorVar5.png" id="floor_var5"]
+[ext_resource type="Texture2D" path="res://assets/tiles/corner_top_left.png" id="corner_top_left"]
+[ext_resource type="Texture2D" path="res://assets/tiles/corner_top_right.png" id="corner_top_right"]
+[ext_resource type="Texture2D" path="res://assets/tiles/corner_bottom_left.png" id="corner_bottom_left"]
+[ext_resource type="Texture2D" path="res://assets/tiles/corner_bottom_right.png" id="corner_bottom_right"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_c357n"]
+texture = ExtResource("1_oa06l")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floor_var1"]
+texture = ExtResource("6_floor_var1")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floor_var2"]
+texture = ExtResource("floor_var2")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floor_var3"]
+texture = ExtResource("floor_var3")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floor_var4"]
+texture = ExtResource("floor_var4")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_floor_var5"]
+texture = ExtResource("floor_var5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_vkqvv"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_c357n")
+sources/2 = SubResource("TileSetAtlasSource_floor_var1")
+sources/3 = SubResource("TileSetAtlasSource_floor_var2")
+sources/4 = SubResource("TileSetAtlasSource_floor_var3")
+sources/5 = SubResource("TileSetAtlasSource_floor_var4")
+sources/6 = SubResource("TileSetAtlasSource_floor_var5")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dogit"]
+texture = ExtResource("2_s5wdn")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wall_bottom"]
+texture = ExtResource("7_wall_bottom")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wall_left"]
+texture = ExtResource("8_wall_left")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wall_right"]
+texture = ExtResource("9_wall_right")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_corner_top_left"]
+texture = ExtResource("corner_top_left")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_corner_top_right"]
+texture = ExtResource("corner_top_right")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_corner_bottom_left"]
+texture = ExtResource("corner_bottom_left")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_corner_bottom_right"]
+texture = ExtResource("corner_bottom_right")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSet" id="TileSet_rplf5"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 6
+sources/1 = SubResource("TileSetAtlasSource_dogit")
+sources/2 = SubResource("TileSetAtlasSource_wall_bottom")
+sources/3 = SubResource("TileSetAtlasSource_wall_left")
+sources/4 = SubResource("TileSetAtlasSource_wall_right")
+sources/5 = SubResource("TileSetAtlasSource_corner_top_left")
+sources/6 = SubResource("TileSetAtlasSource_corner_top_right")
+sources/7 = SubResource("TileSetAtlasSource_corner_bottom_left")
+sources/8 = SubResource("TileSetAtlasSource_corner_bottom_right")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rplf5"]
+size = Vector2(32, 32)
+
+[node name="GeneratedRoom" type="Node2D" unique_id=1056395696]
+scale = Vector2(1.315, 1.315)
+script = ExtResource("3_generator")
+
+[node name="Floor" type="TileMapLayer" parent="." unique_id=1838172810]
+texture_filter = 1
+position = Vector2(640, 360)
+tile_set = SubResource("TileSet_vkqvv")
+
+[node name="Walls" type="TileMapLayer" parent="." unique_id=1413811584]
+texture_filter = 1
+position = Vector2(640, 360)
+tile_set = SubResource("TileSet_rplf5")
+
+[node name="SpawnPoint" type="Marker2D" parent="." unique_id=1917624883]
+
+[node name="Door" type="Area2D" parent="." unique_id=776232187]
+position = Vector2(373, 33)
+collision_mask = 4
+script = ExtResource("4_vkqvv")
+
+[node name="Sprite2D" type="Sprite2D" parent="Door" unique_id=1377555905]
+texture_filter = 1
+texture = ExtResource("5_dogit")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door" unique_id=573303427]
+shape = SubResource("RectangleShape2D_rplf5")
+
+[node name="Status" type="Label" parent="Door" unique_id=1960583733]
+offset_left = -90.0
+offset_top = -48.0
+offset_right = 90.0
+offset_bottom = -20.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+text = "Trancada"
+horizontal_alignment = 1
+
+[node name="Destination" type="Marker2D" parent="." unique_id=403528867]
+
+[connection signal="body_entered" from="Door" to="Door" method="_on_body_entered"]

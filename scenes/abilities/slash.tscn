@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/slash_ability.gd" id="1"]
+
+[node name="Slash" type="Node"]
+script = ExtResource("1")
+ability_id = &"slash"
+trigger_id = &"stroke_turn"
+stamina_cost = 20.0

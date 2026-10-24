@@ -1,0 +1,84 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/library_menu.gd" id="1_menu"]
+
+[node name="LibraryMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_menu")
+
+[node name="LibrariesButton" type="Button" parent="."]
+offset_left = 24.0
+offset_top = 220.0
+offset_right = 244.0
+offset_bottom = 276.0
+text = "Bibliotecas"
+
+[node name="Overlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="Panel" type="PanelContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 300.0
+offset_right = -24.0
+offset_bottom = -160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Overlay/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Options" type="VBoxContainer" parent="Overlay/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Overlay/Panel/Margin/Options"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Bibliotecas de salas"
+
+[node name="Description" type="Label" parent="Overlay/Panel/Margin/Options"]
+layout_mode = 2
+text = "As bibliotecas marcadas serão usadas na geração."
+autowrap_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Overlay/Panel/Margin/Options"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Libraries" type="VBoxContainer" parent="Overlay/Panel/Margin/Options/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Status" type="Label" parent="Overlay/Panel/Margin/Options"]
+layout_mode = 2
+text = "Selecione pelo menos uma biblioteca."
+autowrap_mode = 2
+
+[node name="CloseButton" type="Button" parent="Overlay/Panel/Margin/Options"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Concluir"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/upgrades/stamina.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"stamina"
+display_name = "Stamina máxima"
+world = "common"
+kind = 2
+icon = ExtResource("2")
+color = Color(0.75, 1, 0.4, 1)
+amount = 20.0

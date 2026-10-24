@@ -1,0 +1,14 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/upgrades/health.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"health"
+display_name = "Vida máxima"
+world = "common"
+kind = 1
+icon = ExtResource("2")
+color = Color(1, 0.5, 0.55, 1)
+amount = 20.0

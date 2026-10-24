@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3 uid="uid://b8trtm0xn5vxe"]
+
+[ext_resource type="Script" uid="uid://rywpqrhde543" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/upgrades/gorgon.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://ch7jit8xihseo" path="res://assets/sprites/item-upgrades/gorgon-eye/eye-icon.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"gorgon"
+display_name = "Olho de gorgona"
+world = "medieval"
+icon = ExtResource("3")
+color = Color(0.75, 0.6, 1, 1)
+upgrade_scene = ExtResource("2")

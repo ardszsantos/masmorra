@@ -1,0 +1,267 @@
+[gd_scene format=3 uid="uid://bokcidrx2agfh"]
+
+[ext_resource type="PackedScene" uid="uid://db53devugml32" path="res://scenes/player.tscn" id="2_0wfyh"]
+[ext_resource type="Script" uid="uid://cmsktq8cp2f2n" path="res://scripts/input/stroke_pad.gd" id="3_joystick"]
+[ext_resource type="Script" uid="uid://bnexcyxjvwlmn" path="res://scripts/input/stroke_gesture.gd" id="4_gesture"]
+[ext_resource type="Script" uid="uid://g6l1qffv88gk" path="res://scripts/gameplay/enemy_spawner.gd" id="5_spawn"]
+[ext_resource type="Script" uid="uid://diicojo3mvj1p" path="res://scripts/gameplay/game_session.gd" id="6_session"]
+[ext_resource type="PackedScene" uid="uid://gtcqv5l4i2b8" path="res://scenes/triangular.tscn" id="7_enemy"]
+[ext_resource type="Script" uid="uid://beg7gdlbmokni" path="res://scripts/ui/settings_menu.gd" id="8_settings"]
+[ext_resource type="Script" uid="uid://plbfj6tjoi5g" path="res://scripts/ui/gesture_queue_hud.gd" id="9_queue"]
+[ext_resource type="Script" uid="uid://ccbhgda6fwwyh" path="res://scripts/gameplay/room_transition.gd" id="10_transition"]
+[ext_resource type="PackedScene" uid="uid://bk7awttniyf5d" path="res://scenes/generated_room.tscn" id="11_arena"]
+[ext_resource type="Script" uid="uid://by31lcl7wc06y" path="res://scripts/gameplay/room_rewards.gd" id="12_rewards"]
+[ext_resource type="Script" uid="uid://c8slut0rn7twi" path="res://scripts/ui/minimap.gd" id="13_minimap"]
+[ext_resource type="PackedScene" path="res://scenes/start_menu.tscn" id="15_start_menu"]
+[ext_resource type="Resource" uid="uid://cwj7sjojcped8" path="res://resources/rewards/laser.tres" id="16_laser_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/jetpack.tres" id="17_jetpack_reward"]
+[ext_resource type="Resource" uid="uid://wbb03wsg4t47" path="res://resources/rewards/shuriken.tres" id="18_shuriken_reward"]
+[ext_resource type="Resource" uid="uid://b8trtm0xn5vxe" path="res://resources/rewards/gorgon.tres" id="19_gorgon_reward"]
+[ext_resource type="Resource" uid="uid://barn2neqv7bw0" path="res://resources/rewards/fire_ring.tres" id="20_ring_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/triangelo.tres" id="21_triangelo_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/health.tres" id="26_health_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/stamina.tres" id="27_stamina_reward"]
+[ext_resource type="Script" uid="uid://r0q8ay1mx5e8" path="res://scripts/ui/reward_guides.gd" id="22_reward_guides"]
+[ext_resource type="PackedScene" path="res://scenes/purple_head.tscn" id="23_purple_head"]
+[ext_resource type="Script" uid="uid://bjnuijmvgneu2" path="res://scripts/ui/backpack.gd" id="24_backpack"]
+[ext_resource type="Texture2D" uid="uid://xxi4db6oxvq7" path="res://assets/upgrades/backpack.svg" id="25_backpack_icon"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8vrlf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1vivr"]
+bg_color = Color(0.48235294, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qbdty"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v5gy4"]
+bg_color = Color(0.15361872, 0.33414668, 0.78235406, 1)
+
+[node name="Main" type="Node2D" unique_id=754678266]
+
+[node name="Rooms" type="Node2D" parent="." unique_id=153501]
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1590444962]
+
+[node name="StrokePad" type="Control" parent="HUD" unique_id=1515585989]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_joystick")
+
+[node name="StatusHud" type="MarginContainer" parent="HUD" unique_id=109905524]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 324.0
+offset_bottom = 204.0
+mouse_filter = 2
+
+[node name="Stats" type="VBoxContainer" parent="HUD/StatusHud" unique_id=2108327361]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="HealthBar" type="ProgressBar" parent="HUD/StatusHud/Stats" unique_id=1060550108]
+custom_minimum_size = Vector2(280, 22)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_8vrlf")
+theme_override_styles/fill = SubResource("StyleBoxFlat_1vivr")
+step = 0.1
+value = 100.0
+
+[node name="StaminaBar" type="ProgressBar" parent="HUD/StatusHud/Stats" unique_id=2063282194]
+custom_minimum_size = Vector2(280, 22)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_qbdty")
+theme_override_styles/fill = SubResource("StyleBoxFlat_v5gy4")
+step = 0.1
+value = 100.0
+
+[node name="BackpackButton" type="Button" parent="HUD/StatusHud/Stats" unique_id=930676280]
+visible = false
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 0
+tooltip_text = "Mochila"
+focus_mode = 0
+toggle_mode = true
+icon = ExtResource("25_backpack_icon")
+
+[node name="ScoreLabel" type="Label" parent="HUD/StatusHud/Stats" unique_id=36269822]
+layout_mode = 2
+text = "Pontos: 0"
+
+[node name="RoomLabel" type="Label" parent="HUD/StatusHud/Stats" unique_id=1863720928]
+layout_mode = 2
+text = "Lobby"
+
+[node name="EncounterLabel" type="Label" parent="HUD/StatusHud/Stats" unique_id=679125028]
+layout_mode = 2
+
+[node name="Backpack" type="ScrollContainer" parent="HUD" unique_id=1987240901 node_paths=PackedStringArray("toggle_button", "upgrades", "transition")]
+visible = false
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 300.0
+offset_right = 124.0
+offset_bottom = -160.0
+grow_vertical = 2
+horizontal_scroll_mode = 0
+scroll_deadzone = 12
+script = ExtResource("24_backpack")
+toggle_button = NodePath("../StatusHud/Stats/BackpackButton")
+upgrades = NodePath("../../Player/Upgrades")
+transition = NodePath("../../RoomTransition")
+
+[node name="GestureQueueHud" type="Control" parent="HUD" unique_id=2088547778]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -124.0
+offset_right = 260.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("9_queue")
+
+[node name="Minimap" type="Control" parent="HUD" unique_id=871158298 node_paths=PackedStringArray("transition", "player", "enemies")]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -244.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 204.0
+grow_horizontal = 0
+mouse_filter = 2
+script = ExtResource("13_minimap")
+transition = NodePath("../../RoomTransition")
+player = NodePath("../../Player")
+enemies = NodePath("../../Enemies")
+
+[node name="SettingsMenu" type="Control" parent="HUD" unique_id=1026588175]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("8_settings")
+
+[node name="SettingsButton" type="Button" parent="HUD/SettingsMenu" unique_id=1981441568]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -88.0
+offset_top = 216.0
+offset_right = -24.0
+offset_bottom = 272.0
+text = "⚙"
+
+[node name="SettingsPanel" type="PanelContainer" parent="HUD/SettingsMenu" unique_id=1440259807]
+visible = false
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -324.0
+offset_top = 284.0
+offset_right = -24.0
+offset_bottom = 396.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/SettingsMenu/SettingsPanel" unique_id=1558661820]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Options" type="VBoxContainer" parent="HUD/SettingsMenu/SettingsPanel/Margin" unique_id=1350143063]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="HUD/SettingsMenu/SettingsPanel/Margin/Options" unique_id=1439544789]
+layout_mode = 2
+text = "Configurações"
+
+[node name="ReturnToMenu" type="Button" parent="HUD/SettingsMenu/SettingsPanel/Margin/Options" unique_id=707190976]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+text = "Voltar ao menu"
+
+[node name="RewardGuides" type="Control" parent="HUD" unique_id=15139481 node_paths=PackedStringArray("rewards", "player")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("22_reward_guides")
+rewards = NodePath("../../RoomRewards")
+player = NodePath("../../Player")
+
+[node name="StartMenu" parent="HUD" unique_id=2045299164 node_paths=PackedStringArray("transition") instance=ExtResource("15_start_menu")]
+transition = NodePath("../../RoomTransition")
+
+[node name="Player" parent="." unique_id=134151592 instance=ExtResource("2_0wfyh")]
+position = Vector2(269, 354)
+
+[node name="StrokeGesture" type="Node" parent="." unique_id=338581098]
+script = ExtResource("4_gesture")
+
+[node name="Enemies" type="Node2D" parent="." unique_id=1187385168]
+
+[node name="EnemySpawner" type="Node" parent="." unique_id=1295962723]
+script = ExtResource("5_spawn")
+enemy_scene = ExtResource("7_enemy")
+enemy_variants = Array[PackedScene]([ExtResource("23_purple_head"), ExtResource("7_enemy")])
+
+[node name="SpawnTimer" type="Timer" parent="EnemySpawner" unique_id=1874481758]
+wait_time = 2.0
+
+[node name="GameSession" type="Node" parent="." unique_id=275267525]
+script = ExtResource("6_session")
+
+[node name="RoomRewards" type="Node" parent="." unique_id=65365379]
+script = ExtResource("12_rewards")
+reward_pool = Array[Resource]([ExtResource("16_laser_reward"), ExtResource("17_jetpack_reward"), ExtResource("18_shuriken_reward"), ExtResource("19_gorgon_reward"), ExtResource("20_ring_reward"), ExtResource("21_triangelo_reward"), ExtResource("26_health_reward"), ExtResource("27_stamina_reward")])
+
+[node name="RoomTransition" type="Node" parent="." unique_id=1102412159 node_paths=PackedStringArray("rooms", "player", "stroke_pad", "stroke_gesture")]
+script = ExtResource("10_transition")
+room_scene = ExtResource("11_arena")
+rooms = NodePath("../Rooms")
+player = NodePath("../Player")
+stroke_pad = NodePath("../HUD/StrokePad")
+stroke_gesture = NodePath("../StrokeGesture")
+
+[connection signal="stroke_ended" from="HUD/StrokePad" to="StrokeGesture" method="end"]
+[connection signal="stroke_sampled" from="HUD/StrokePad" to="StrokeGesture" method="sample"]
+[connection signal="stroke_started" from="HUD/StrokePad" to="StrokeGesture" method="begin"]
+[connection signal="action_requested" from="StrokeGesture" to="Player" method="request_action"]
+[connection signal="direction_changed" from="StrokeGesture" to="Player" method="set_movement_direction"]
+[connection signal="gesture_completed" from="StrokeGesture" to="HUD/StrokePad" method="complete_queued_gesture"]
+[connection signal="gesture_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="complete_queued_gesture"]
+[connection signal="gesture_sequence_completed" from="StrokeGesture" to="HUD/StrokePad" method="mark_queued_gesture_completed"]
+[connection signal="gesture_sequence_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="mark_queued_gesture_completed"]
+[connection signal="stroke_queue_cleared" from="StrokeGesture" to="HUD/StrokePad" method="clear_queued_stroke"]
+[connection signal="stroke_queue_cleared" from="StrokeGesture" to="HUD/GestureQueueHud" method="clear_queued_stroke"]
+[connection signal="stroke_queued" from="StrokeGesture" to="HUD/StrokePad" method="show_queued_stroke"]
+[connection signal="stroke_queued" from="StrokeGesture" to="HUD/GestureQueueHud" method="show_queued_stroke"]
+[connection signal="stroke_step_added" from="StrokeGesture" to="HUD/StrokePad" method="add_queued_stroke"]
+[connection signal="stroke_step_added" from="StrokeGesture" to="HUD/GestureQueueHud" method="add_queued_stroke"]
+[connection signal="sustained_action_changed" from="StrokeGesture" to="HUD/StrokePad" method="update_sustained_gesture"]
+[connection signal="sustained_action_changed" from="StrokeGesture" to="Player/Abilities" method="update_sustained_action"]

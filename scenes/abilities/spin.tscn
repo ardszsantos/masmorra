@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/spin_ability.gd" id="1"]
+
+[node name="Spin" type="Node"]
+script = ExtResource("1")
+ability_id = &"spin"
+trigger_id = &"circle"
+sustained = true
+overrides_movement = false
+stamina_per_second = 25.0

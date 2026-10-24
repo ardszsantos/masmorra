@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/reward_marker.gd" id="1"]
+[ext_resource type="FontFile" path="res://assets/fonts/biz-udmincho/BIZUDMincho-Regular.ttf" id="2"]
+
+[node name="RewardMarker" type="Node2D"]
+position = Vector2(0, -130)
+z_index = 4
+script = ExtResource("1")
+
+[node name="Icon" type="Sprite2D" parent="."]
+texture_filter = 1
+
+[node name="Title" type="Label" parent="."]
+offset_left = -120.0
+offset_top = 26.0
+offset_right = 120.0
+offset_bottom = 76.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+horizontal_alignment = 1
+vertical_alignment = 1

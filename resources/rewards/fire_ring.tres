@@ -1,0 +1,14 @@
+[gd_resource type="Resource" format=3 uid="uid://barn2neqv7bw0"]
+
+[ext_resource type="Script" uid="uid://rywpqrhde543" path="res://scripts/gameplay/room_reward.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/upgrades/fire_ring.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://dte5jbk5w4bca" path="res://assets/sprites/item-upgrades/fire-ring/fire-ring-icon.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+reward_id = &"fire_ring"
+display_name = "Anel incendiário"
+world = "medieval"
+icon = ExtResource("3")
+color = Color(1, 0.65, 0.25, 1)
+upgrade_scene = ExtResource("2")

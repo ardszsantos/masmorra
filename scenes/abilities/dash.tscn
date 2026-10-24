@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/dash_ability.gd" id="1"]
+
+[node name="Dash" type="Node"]
+script = ExtResource("1")
+ability_id = &"dash"
+trigger_id = &"double_flick"
+stamina_cost = 25.0
