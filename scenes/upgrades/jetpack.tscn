@@ -1,8 +1,9 @@
 [gd_scene load_steps=2 format=3]
 [ext_resource type="Script" path="res://scripts/upgrades/jetpack_upgrade.gd" id="1"]
 [node name="Jetpack" type="Node2D"]
-position = Vector2(-32, 8)
 scale = Vector2(0.55, 0.55)
 z_index = -1
 visible = false
 script = ExtResource("1")
+attachment_socket = &"BackSocket"
+follow_socket_rotation = true

@@ -4,9 +4,9 @@
 [ext_resource type="PackedScene" path="res://scenes/upgrades/plasma_projectile.tscn" id="2"]
 
 [node name="Laser" type="Node2D"]
-position = Vector2(36, 0)
 scale = Vector2(0.55, 0.55)
 z_index = 2
 visible = false
 script = ExtResource("1")
+attachment_socket = &"HandSocket"
 projectile_scene = ExtResource("2")
