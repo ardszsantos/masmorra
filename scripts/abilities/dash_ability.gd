@@ -1,5 +1,7 @@
 extends "res://scripts/abilities/player_ability.gd"
 
+signal dash_finished
+
 @export_range(1.0, 2000.0) var distance: float = 200.0
 @export_range(0.01, 1.0) var duration: float = 0.16
 @export_range(0.0, 5.0) var cooldown: float = 0.45
@@ -36,6 +38,10 @@ func movement_velocity(delta: float) -> Vector2:
 	return _direction * (distance / duration) * minf(1.0, _remaining / delta)
 
 
+func get_dash_direction() -> Vector2:
+	return _direction
+
+
 func step(delta: float) -> void:
 	if active:
 		preload("res://scripts/gameplay/damage_query.gd").hit(get_parent().get_parent(), hit_radius, damage, _hit)
@@ -46,9 +52,12 @@ func step(delta: float) -> void:
 
 
 func cancel() -> void:
+	var was_active: bool = active
 	super.cancel()
 	_remaining = 0.0
 	_clear_protection()
+	if was_active:
+		dash_finished.emit()
 
 
 func _clear_protection() -> void:
@@ -62,4 +71,4 @@ func _clear_protection() -> void:
 
 
 func _exit_tree() -> void:
-	_clear_protection()
+	cancel()
