@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://gtcqv5l4i2b8" path="res://scenes/triangular.tscn" id="7_enemy"]
 [ext_resource type="Script" uid="uid://beg7gdlbmokni" path="res://scripts/ui/settings_menu.gd" id="8_settings"]
 [ext_resource type="Script" uid="uid://plbfj6tjoi5g" path="res://scripts/ui/gesture_queue_hud.gd" id="9_queue"]
+[ext_resource type="Script" path="res://scripts/ui/gesture_feedback.gd" id="28_feedback"]
 [ext_resource type="Script" uid="uid://ccbhgda6fwwyh" path="res://scripts/gameplay/room_transition.gd" id="10_transition"]
 [ext_resource type="PackedScene" uid="uid://bk7awttniyf5d" path="res://scenes/generated_room.tscn" id="11_arena"]
 [ext_resource type="Script" uid="uid://by31lcl7wc06y" path="res://scripts/gameplay/room_rewards.gd" id="12_rewards"]
@@ -135,6 +136,35 @@ grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("9_queue")
 
+[node name="GestureFailureLabel" type="Label" parent="HUD"]
+visible = false
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -34.0
+offset_right = -24.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GestureFeedback" type="Node" parent="HUD" node_paths=PackedStringArray("abilities", "stroke_pad", "queue_hud", "failure_label", "stamina_bar")]
+script = ExtResource("28_feedback")
+abilities = NodePath("../../Player/Abilities")
+stroke_pad = NodePath("../StrokePad")
+queue_hud = NodePath("../GestureQueueHud")
+failure_label = NodePath("../GestureFailureLabel")
+stamina_bar = NodePath("../StatusHud/Stats/StaminaBar")
+
 [node name="Minimap" type="Control" parent="HUD" unique_id=871158298 node_paths=PackedStringArray("transition", "player", "enemies")]
 layout_mode = 3
 anchors_preset = 1
@@ -253,17 +283,12 @@ stroke_gesture = NodePath("../StrokeGesture")
 [connection signal="stroke_started" from="HUD/StrokePad" to="StrokeGesture" method="begin"]
 [connection signal="action_requested" from="StrokeGesture" to="Player" method="request_action"]
 [connection signal="direction_changed" from="StrokeGesture" to="Player" method="set_movement_direction"]
-[connection signal="action_resolved" from="Player/Abilities" to="HUD/StrokePad" method="resolve_queued_gesture"]
-[connection signal="action_resolved" from="Player/Abilities" to="HUD/GestureQueueHud" method="resolve_queued_gesture"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/StrokePad" method="complete_queued_gesture"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="complete_queued_gesture"]
-[connection signal="gesture_sequence_completed" from="StrokeGesture" to="HUD/StrokePad" method="mark_queued_gesture_completed"]
-[connection signal="gesture_sequence_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="mark_queued_gesture_completed"]
 [connection signal="stroke_queue_cleared" from="StrokeGesture" to="HUD/StrokePad" method="clear_queued_stroke"]
 [connection signal="stroke_queue_cleared" from="StrokeGesture" to="HUD/GestureQueueHud" method="clear_queued_stroke"]
+[connection signal="stroke_queue_cleared" from="StrokeGesture" to="HUD/GestureFeedback" method="reset"]
 [connection signal="stroke_queued" from="StrokeGesture" to="HUD/StrokePad" method="show_queued_stroke"]
 [connection signal="stroke_queued" from="StrokeGesture" to="HUD/GestureQueueHud" method="show_queued_stroke"]
-[connection signal="stroke_step_added" from="StrokeGesture" to="HUD/StrokePad" method="add_queued_stroke"]
-[connection signal="stroke_step_added" from="StrokeGesture" to="HUD/GestureQueueHud" method="add_queued_stroke"]
 [connection signal="sustained_action_changed" from="StrokeGesture" to="HUD/StrokePad" method="update_sustained_gesture"]
 [connection signal="sustained_action_changed" from="StrokeGesture" to="Player/Abilities" method="update_sustained_action"]

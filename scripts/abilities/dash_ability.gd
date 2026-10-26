@@ -33,6 +33,14 @@ func try_activate(direction: Vector2) -> bool:
 	return true
 
 
+func get_activation_failure(direction: Vector2) -> StringName:
+	if _cooldown_remaining > 0.0:
+		return &"cooldown"
+	if direction.is_zero_approx():
+		return &"direction"
+	return super.get_activation_failure(direction)
+
+
 func movement_velocity(delta: float) -> Vector2:
 	# Scale the last physics step so distance is independent of the tick rate.
 	return _direction * (distance / duration) * minf(1.0, _remaining / delta)

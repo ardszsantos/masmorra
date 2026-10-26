@@ -2,6 +2,7 @@ extends Node
 
 signal action_activated
 signal action_resolved(success: bool)
+signal action_failed(reason: StringName)
 signal ability_started(ability: Node)
 
 const Ability = preload("res://scripts/abilities/player_ability.gd")
@@ -38,17 +39,21 @@ func remove_ability(id: StringName) -> void:
 
 
 func request_action(trigger: StringName, direction: Vector2) -> void:
-	if disabled or _is_stunned():
-		action_resolved.emit(false)
+	if disabled:
+		_reject_action(&"disabled")
+		return
+	if _is_stunned():
+		_reject_action(&"stunned")
 		return
 	for ability in get_children():
 		if ability is Ability and ability.active:
-			action_resolved.emit(false)
+			_reject_action(&"busy")
 			return
+	var failure: StringName = &"not_equipped"
 	for ability in get_children():
 		if ability is Ability and not ability.sustained and ability.trigger_id == trigger:
 			if stamina != null and not stamina.can_spend(ability.stamina_cost):
-				action_resolved.emit(false)
+				_reject_action(&"stamina")
 				return
 			if ability.try_activate(direction):
 				if stamina != null:
@@ -57,7 +62,13 @@ func request_action(trigger: StringName, direction: Vector2) -> void:
 				ability_started.emit(ability)
 				action_resolved.emit(true)
 				return
+			failure = ability.get_activation_failure(direction)
+	_reject_action(failure)
+
+
+func _reject_action(reason: StringName) -> void:
 	action_resolved.emit(false)
+	action_failed.emit(reason)
 
 
 func resolve_velocity(base_velocity: Vector2, delta: float) -> Vector2:
@@ -78,6 +89,7 @@ func update_sustained_action(trigger: StringName, value: float) -> void:
 		if ability is Ability and ability.sustained and ability.trigger_id == trigger:
 			if not is_zero_approx(value) and not ability.active and stamina != null and not stamina.can_spend(ability.stamina_per_second / 60.0):
 				_exhausted = true
+				action_failed.emit(&"stamina")
 				return
 			ability.update_input(value)
 
@@ -90,6 +102,7 @@ func step(delta: float) -> void:
 					stamina.spend(stamina.current)
 					ability.cancel()
 					_exhausted = true
+					action_failed.emit(&"stamina")
 					continue
 			ability.step(delta)
 

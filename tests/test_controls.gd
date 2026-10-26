@@ -215,15 +215,6 @@ func complete_stroke(gesture: Node, origin: Vector2, direction: Vector2) -> void
 	gesture.end()
 
 
-func complete_cross(gesture: Node) -> void:
-	var center := Vector2(300, 500)
-	gesture.begin(center)
-	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
-		gesture.sample(center + direction * 100.0)
-		gesture.sample(center)
-	gesture.end()
-
-
 func test_gesture_result_feedback() -> void:
 	var main := preload("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -254,17 +245,11 @@ func test_gesture_result_feedback() -> void:
 	check(hud._failed and not hud._completed, "Cooldown rejection must turn queue tokens red")
 
 	gesture.reset()
-	complete_cross(gesture)
-	check(pad._queued_directions.size() == 4 and hud.queued_directions.size() == 4, "Cross feedback must retain all four arms")
-	check(pad._queue_completed and not pad._queue_failed, "Successful cross arrows must turn green")
-	check(hud._completed and not hud._failed, "Successful cross tokens must turn green")
-
-	gesture.reset()
 	abilities.disabled = true
-	complete_cross(gesture)
-	check(pad._queue_failed and not pad._queue_completed, "Disabled action must turn cross arrows red")
-	check(hud._failed and not hud._completed, "Disabled action must turn cross tokens red")
-	check(pad._queued_directions.size() == 4 and hud.queued_directions.size() == 4, "Rejected cross feedback must retain all four arms")
+	complete_stroke(gesture, Vector2(180, 300), Vector2.UP)
+	complete_stroke(gesture, Vector2(350, 300), Vector2.UP)
+	check(pad._queue_failed and not pad._queue_completed, "Disabled action must turn arrows red")
+	check(hud._failed and not hud._completed, "Disabled action must turn tokens red")
 
 	pad._process(2.0)
 	hud._process(2.0)
@@ -319,15 +304,6 @@ func test_new_gestures() -> void:
 	gesture.sample(Vector2(100, 25))
 	gesture.end()
 	check(triggers == [&"stroke_turn"], "A forgiving two-stroke L should activate slash")
-	gesture.reset()
-	triggers.clear()
-	var cross_steps: Array[Vector2] = []
-	gesture.stroke_step_added.connect(func(direction: Vector2, _duration: float, _position: Vector2): cross_steps.append(direction))
-	gesture.begin(Vector2.ZERO)
-	for point in [Vector2(-100, 0), Vector2.ZERO, Vector2(0, 100), Vector2.ZERO, Vector2(100, 0), Vector2.ZERO, Vector2(0, -100), Vector2.ZERO]:
-		gesture.sample(point)
-	check(triggers == [&"cross_nuke"], "All four cross arms in any order must trigger the nuke")
-	check(cross_steps.size() == 4, "Each completed cross arm must add one persistent queue token")
 	gesture.free()
 	var body := preload("res://scenes/player.tscn").instantiate()
 	root.add_child(body)

@@ -10,7 +10,6 @@
 [ext_resource type="PackedScene" path="res://scenes/abilities/spin.tscn" id="6_spin"]
 [ext_resource type="Script" uid="uid://bklhrhd1a2owb" path="res://scripts/gameplay/health.gd" id="7_health"]
 [ext_resource type="Script" uid="uid://buebc0dg5y74q" path="res://scripts/gameplay/stamina.gd" id="8_stamina"]
-[ext_resource type="PackedScene" path="res://scenes/abilities/nuke.tscn" id="9_nuke"]
 [ext_resource type="Script" uid="uid://cx5sgu27ysknr" path="res://scripts/gameplay/hit_reaction.gd" id="20_reaction"]
 [ext_resource type="Script" path="res://scripts/upgrades/upgrade_controller.gd" id="21_upgrades"]
 
@@ -46,7 +45,7 @@ shape = SubResource("CircleShape2D_8vrlf")
 
 [node name="Abilities" type="Node" parent="." unique_id=162407111]
 script = ExtResource("3_abilities")
-starting_abilities = Array[PackedScene]([ExtResource("4_dash"), ExtResource("5_dash"), ExtResource("6_spin"), ExtResource("9_nuke")])
+starting_abilities = Array[PackedScene]([ExtResource("4_dash"), ExtResource("5_dash"), ExtResource("6_spin")])
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1744017960]
 position = Vector2(0, 210)
