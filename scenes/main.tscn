@@ -253,6 +253,8 @@ stroke_gesture = NodePath("../StrokeGesture")
 [connection signal="stroke_started" from="HUD/StrokePad" to="StrokeGesture" method="begin"]
 [connection signal="action_requested" from="StrokeGesture" to="Player" method="request_action"]
 [connection signal="direction_changed" from="StrokeGesture" to="Player" method="set_movement_direction"]
+[connection signal="action_resolved" from="Player/Abilities" to="HUD/StrokePad" method="resolve_queued_gesture"]
+[connection signal="action_resolved" from="Player/Abilities" to="HUD/GestureQueueHud" method="resolve_queued_gesture"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/StrokePad" method="complete_queued_gesture"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="complete_queued_gesture"]
 [connection signal="gesture_sequence_completed" from="StrokeGesture" to="HUD/StrokePad" method="mark_queued_gesture_completed"]

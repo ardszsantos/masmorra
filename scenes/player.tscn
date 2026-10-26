@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://db53devugml32"]
 
 [ext_resource type="Script" path="res://scripts/pixel_perfect_camera.gd" id="pixel_camera"]
-[ext_resource type="Texture2D" uid="uid://bhy5atxqgkgvt" path="res://assets/sprites/character.png" id="1_3vyb7"]
+[ext_resource type="SpriteFrames" path="res://resources/player/player_sprite_frames.tres" id="player_frames"]
+[ext_resource type="Script" path="res://scripts/gameplay/player_visual.gd" id="player_visual"]
 [ext_resource type="Script" uid="uid://bv8pahxbe0ee0" path="res://scripts/player.gd" id="2_movement"]
 [ext_resource type="Script" uid="uid://bcy134wuhtdwm" path="res://scripts/abilities/ability_controller.gd" id="3_abilities"]
 [ext_resource type="PackedScene" path="res://scenes/abilities/slash.tscn" id="4_dash"]
@@ -22,10 +23,19 @@ collision_mask = 3
 motion_mode = 1
 script = ExtResource("2_movement")
 
-[node name="Visual" type="Sprite2D" parent="." unique_id=1617877471]
-texture_filter = 4
-scale = Vector2(0.05, 0.05)
-texture = ExtResource("1_3vyb7")
+[node name="Visual" type="AnimatedSprite2D" parent="." unique_id=1617877471]
+texture_filter = 1
+scale = Vector2(2, 2)
+sprite_frames = ExtResource("player_frames")
+animation = &"idle_s"
+autoplay = "idle_s"
+script = ExtResource("player_visual")
+
+[node name="BackSocket" type="Node2D" parent="Visual"]
+
+[node name="HandSocket" type="Node2D" parent="Visual"]
+
+[node name="EyeSocket" type="Node2D" parent="Visual"]
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=233220684]
 visible = false
