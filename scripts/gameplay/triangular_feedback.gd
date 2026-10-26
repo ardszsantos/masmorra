@@ -15,6 +15,8 @@ var _start := Vector2.ZERO
 var _end := Vector2.ZERO
 var _announced: bool = false
 var _rushing: bool = false
+var _guide_start := Vector2.ZERO
+var _show_guide: bool = false
 
 
 func _ready() -> void:
@@ -41,6 +43,14 @@ func announce(destination: Vector2) -> void:
 	_destination = destination
 	_announced = true
 	_rushing = false
+	_show_guide = false
+	queue_redraw()
+
+
+func announce_path(origin: Vector2, destination: Vector2) -> void:
+	announce(destination)
+	_guide_start = origin
+	_show_guide = true
 	queue_redraw()
 
 
@@ -48,6 +58,7 @@ func rush(start: Vector2, current: Vector2) -> void:
 	_start = start
 	_end = current
 	_rushing = true
+	_show_guide = false
 	queue_redraw()
 
 
@@ -55,10 +66,13 @@ func clear() -> void:
 	set_contracting(false)
 	_announced = false
 	_rushing = false
+	_show_guide = false
 	queue_redraw()
 
 
 func _draw() -> void:
+	if _show_guide:
+		draw_dashed_line(_guide_start, _destination, trail_color, trail_width, 12.0, true)
 	if _rushing and not _start.is_equal_approx(_end):
 		draw_line(_start, _end, trail_color, trail_width, true)
 	if _announced:
