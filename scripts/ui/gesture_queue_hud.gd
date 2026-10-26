@@ -88,7 +88,7 @@ func mark_queued_gesture_completed(duration: float) -> void:
 	queue_redraw()
 
 func resolve_queued_gesture(success: bool) -> void:
-	if queued_directions.is_empty():
+	if queued_directions.is_empty() or _remaining <= 0.0:
 		return
 	_completed = success
 	_failed = not success
