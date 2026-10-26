@@ -78,17 +78,8 @@ func add_queued_stroke(direction: Vector2, duration: float, _marker_position: Ve
 func complete_queued_gesture(direction: Vector2, duration: float) -> void:
 	add_queued_stroke(direction, duration)
 
-func mark_queued_gesture_completed(duration: float) -> void:
-	_completed = false
-	_failed = false
-	_duration = maxf(duration, 0.001)
-	_remaining = _duration
-	visible = true
-	set_process(true)
-	queue_redraw()
-
 func resolve_queued_gesture(success: bool) -> void:
-	if queued_directions.is_empty():
+	if queued_directions.is_empty() or _remaining <= 0.0:
 		return
 	_completed = success
 	_failed = not success

@@ -182,6 +182,32 @@ func _nearest_walkable(cell: Vector2i) -> Vector2i:
 	return nearest
 
 
+func navigation_points() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for cell: Vector2i in _walkable_cells:
+		points.append(_world_position(cell))
+	return points
+
+
+func navigation_path(origin: Vector2, destination: Vector2) -> PackedVector2Array:
+	# Reuse the same walkable cells and reverse search as ordinary pursuit.
+	pursuit_point(origin, destination)
+	var from := _nearest_walkable(floor_layer.local_to_map(floor_layer.to_local(origin)))
+	var goal := _nearest_walkable(floor_layer.local_to_map(floor_layer.to_local(destination)))
+	var points := PackedVector2Array()
+	if not _path_steps.has(from):
+		return points
+	points.append(_world_position(from))
+	while from != goal:
+		var next: Vector2i = _path_steps.get(from, from)
+		if next == from:
+			return PackedVector2Array()
+		from = next
+		points.append(_world_position(from))
+	points.append(destination)
+	return points
+
+
 func _close_void_edges(floor_cells: Dictionary) -> void:
 	# Empty space has no artwork, but must not become a walkable exit from the map.
 	_void_boundary = StaticBody2D.new()

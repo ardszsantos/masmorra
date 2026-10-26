@@ -56,14 +56,14 @@ The project is built with Godot 4.7. Gameplay and interface text are in Portugue
 
 ```mermaid
 flowchart TD
-    A[Choose room libraries] --> B[Assemble and enter a room]
-    B --> C[Defeat all enemies]
-    C --> D[Exits unlock with separate rewards]
-    D --> E[Reach a reward door]
-    E --> F[Enter door and receive its reward]
-    F --> G{Player alive?}
-    G -- Yes --> B
-    G -- No --> H[Run ends]
+	A[Choose room libraries] --> B[Assemble and enter a room]
+	B --> C[Defeat all enemies]
+	C --> D[Exits unlock with separate rewards]
+	D --> E[Reach a reward door]
+	E --> F[Enter door and receive its reward]
+	F --> G{Player alive?}
+	G -- Yes --> B
+	G -- No --> H[Run ends]
 ```
 
 <details>

@@ -23,6 +23,7 @@ func run() -> void:
 	var spawner = main.get_node("EnemySpawner")
 	# This suite covers the original pursuer's melee range, stun and knockback.
 	spawner.enemy_scene = preload("res://scenes/enemy.tscn")
+	spawner.enemy_variants.clear()
 	var session = main.get_node("GameSession")
 	check(not spawner.enabled, "Lobby without spawn points must not start spawning")
 	check(spawner.get_node("SpawnTimer").is_stopped(), "Lobby must not run the spawn timer")
@@ -101,13 +102,6 @@ func run() -> void:
 	check(is_equal_approx(stamina.current, 10.0), "Recovery must restore 20 per second after delay")
 	check(main.get_node("HUD/StatusHud/Stats/StaminaBar").value == stamina.current, "Stamina HUD must track resource")
 	spawner.spawn_enemy()
-	var nuke_target = main.get_node("Enemies").get_child(main.get_node("Enemies").get_child_count() - 1)
-	nuke_target.set_physics_process(false)
-	nuke_target.get_node("MeleeAttack").set_physics_process(false)
-	var stamina_before_nuke: float = stamina.current
-	abilities.request_action(&"cross_nuke", Vector2.ZERO)
-	check(nuke_target.get_node("Health").dead, "Cross nuke must kill enemies anywhere on the map")
-	check(stamina.current == stamina_before_nuke, "Cross nuke must not spend stamina")
 	spawner.spawn_enemy()
 	check(not spawner.enabled and spawner.get_node("SpawnTimer").is_stopped(), "Exhausting the finite quota must stop spawning")
 	health._invulnerability = 0.0

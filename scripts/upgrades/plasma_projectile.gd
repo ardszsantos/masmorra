@@ -18,8 +18,10 @@ const STAGES = [
 ]
 @export var formation_time: float = 0.09
 @export var projectile_width: float = 10.0
+@export_range(0.0, 2000.0, 10.0) var maximum_distance: float = 0.0
 var visual_scale: float = 1.0
 var _visual_age: float = 0.0
+var _distance_traveled: float = 0.0
 
 func _process(delta: float) -> void:
 	_visual_age += delta
@@ -36,6 +38,7 @@ func launch(origin: Vector2, direction: Vector2, source: CharacterBody2D) -> voi
 	_direction = direction.normalized()
 	global_rotation = _direction.angle()
 	_source = source
+	_distance_traveled = 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -48,7 +51,10 @@ func _physics_process(delta: float) -> void:
 	if lifetime <= 0.0:
 		queue_free()
 		return
-	var finish := global_position + _direction * speed * delta
+	var travel := speed * delta
+	if maximum_distance > 0.0:
+		travel = minf(travel, maxf(0.0, maximum_distance - _distance_traveled))
+	var finish := global_position + _direction * travel
 	var query := PhysicsRayQueryParameters2D.create(global_position, finish, collision_mask)
 	query.exclude = [_source.get_rid()]
 	query.hit_from_inside = true
@@ -61,6 +67,9 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	global_position = finish
+	_distance_traveled += travel
+	if maximum_distance > 0.0 and _distance_traveled >= maximum_distance:
+		queue_free()
 
 
 func _draw() -> void:

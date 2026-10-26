@@ -1,12 +1,14 @@
 extends SceneTree
 
 const TRIANGULAR = preload("res://scenes/triangular.tscn")
-const PLAYER = preload("res://scenes/player.tscn")
-const MAIN = preload("res://scenes/main.tscn")
+const ROOM = preload("res://scenes/generated_room.tscn")
+const Rules = preload("res://scripts/gameplay/piece_rules.gd")
+const Triangle = preload("res://scripts/gameplay/triangular.gd")
+const GeneratedRoom = preload("res://scripts/gameplay/generated_room.gd")
+
 var failures: int = 0
 var checks: int = 0
 var world: Node2D
-var player: CharacterBody2D
 
 
 func _init() -> void:
@@ -25,15 +27,24 @@ func settle() -> void:
 	await physics_frame
 
 
-func make_enemy(location := Vector2.ZERO):
-	var enemy = TRIANGULAR.instantiate()
+func make_world() -> void:
+	if is_instance_valid(world):
+		world.free()
+	world = Node2D.new()
+	root.add_child(world)
+
+
+func make_enemy(location: Vector2, room: GeneratedRoom = null) -> Triangle:
+	var enemy := TRIANGULAR.instantiate() as Triangle
 	enemy.position = location
-	enemy.target = player
+	enemy.navigation_room = room
 	world.add_child(enemy)
+	enemy.set_physics_process(false)
+	enemy.get_node("MeleeAttack").set_physics_process(false)
 	return enemy
 
 
-func make_wall(location: Vector2, size: Vector2) -> StaticBody2D:
+func make_wall(location: Vector2, size: Vector2) -> void:
 	var wall := StaticBody2D.new()
 	wall.position = location
 	wall.collision_layer = 1
@@ -43,239 +54,147 @@ func make_wall(location: Vector2, size: Vector2) -> StaticBody2D:
 	collision.shape = shape
 	wall.add_child(collision)
 	world.add_child(wall)
-	return wall
+
+
+func path_length(origin: Vector2, path: PackedVector2Array) -> float:
+	var length: float = 0.0
+	var previous := origin
+	for point in path:
+		length += previous.distance_to(point)
+		previous = point
+	return length
+
+
+func exercise_lap(enemy: Triangle, label: String) -> void:
+	var route := enemy._route
+	check(not route.circuit.is_empty(), label + ": must have a patrol")
+	if route.circuit.is_empty():
+		return
+	var origin: Vector2 = route.vertices[0]
+	var length := path_length(origin, route.circuit)
+	var approach_length := path_length(enemy.global_position, route.approach)
+	check(length >= enemy.circuit_side * 1.5, label + ": must not shrink to a miniature circuit")
+	var steps := ceili((length + approach_length) / enemy.speed * 30.0) + 60
+	var start_laps: int = enemy._completed_laps
+	var original_circuit := route.circuit.duplicate()
+	var largest_step: float = 0.0
+	for step in range(steps):
+		var previous := enemy.global_position
+		enemy._physics_process(1.0 / 30.0)
+		largest_step = maxf(largest_step, previous.distance_to(enemy.global_position))
+		if route.circuit.is_empty():
+			break
+		if enemy._completed_laps > start_laps:
+			break
+	check(enemy._completed_laps > start_laps, label + ": must finish its loop without hitting walls")
+	check(route.circuit == original_circuit, label + ": must retain the same loop")
+	check(largest_step <= enemy.speed / 30.0 + 0.02, label + ": must never burst or accelerate")
 
 
 func run() -> void:
-	seed(20261016)
-	world = Node2D.new()
-	root.add_child(world)
-	player = PLAYER.instantiate()
-	player.position = Vector2(5000, 5000)
-	world.add_child(player)
-	player.set_physics_process(false)
-	player.get_node("Stamina").set_physics_process(false)
-	await settle()
-	await test_burst()
-	await test_player_abilities()
-	await test_contact()
-	await test_obstacles()
+	await test_autonomous_triangle()
+	await test_near_wall()
+	await test_narrow_corridor()
+	await test_freeze_and_shutdown()
 	world.free()
-	await test_encounter()
-	print("Triangular tests: %d failures / %d checks" % [failures, checks])
+	print("Triangular patrol: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
 
-func test_burst() -> void:
-	player.global_position = Vector2(1000, 0)
-	var enemy = make_enemy()
+func test_autonomous_triangle() -> void:
+	make_world()
+	var enemy := make_enemy(Vector2.ZERO)
+	var other := make_enemy(Vector2.ZERO)
+	var player := CharacterBody2D.new()
+	player.collision_layer = 4
+	world.add_child(player)
+	enemy.target = player
 	await settle()
-	check(enemy.phase == enemy.Phase.HUNT and enemy.position.x > 0.0, "Distant player must trigger pursuit")
-	enemy.set_physics_process(false)
-	enemy.global_position = Vector2.ZERO
-	player.global_position = Vector2(180, 0)
-	await settle()
-	enemy._physics_process(0.01)
-	check(enemy.phase == enemy.Phase.WINDUP, "Nearby player must trigger a telegraphed dash")
-	var committed: Vector2 = enemy._dash_direction
-	var marker: Vector2 = enemy.get_node("RouteFeedback")._destination
-	player.global_position = Vector2(180, 100)
-	enemy._physics_process(0.05)
-	check(enemy._dash_direction == committed and enemy.get_node("RouteFeedback")._destination == marker, "Wind-up must not track a dodge")
-	enemy._physics_process(enemy.first_windup)
-	check(enemy.phase == enemy.Phase.RUSH, "Wind-up must start the rush")
-	var before: float = enemy.health.current
-	enemy.take_damage(1.0)
-	check(enemy.health.current == before - 1.0, "Rush must remain vulnerable")
-	check(not enemy.get_node("HitReaction").is_stunned() and enemy.get_node("HitReaction").impulse == Vector2.ZERO, "Hits must not stun or knock back the triangle")
-	enemy._physics_process(0.05)
-	check(enemy._dash_direction == committed and is_zero_approx(enemy.position.y), "Rush must not steer toward the moving player")
-	for dash in range(enemy.dashes_per_burst):
-		if dash > 0:
-			check(enemy.phase == enemy.Phase.WINDUP, "Each follow-up needs a wind-up")
-			var toward: Vector2 = (player.global_position - enemy.global_position).normalized()
-			check(enemy._dash_direction.is_equal_approx(toward), "Follow-up must aim at the player's new position")
-			enemy._physics_process(enemy.followup_windup)
-		for step in range(120):
-			enemy._physics_process(1.0 / 60.0)
-			if enemy.phase != enemy.Phase.RUSH:
-				break
-	check(enemy._dash_count == 3 and enemy.phase == enemy.Phase.RECOVER, "Three dashes must lead to recovery")
-	var recovery_position: Vector2 = enemy.position
-	enemy._physics_process(enemy.recovery_duration * 0.5)
-	check(enemy.phase == enemy.Phase.RECOVER and enemy.position == recovery_position, "Recovery must leave a punish window")
-	enemy._physics_process(enemy.recovery_duration)
-	check(enemy.phase == enemy.Phase.HUNT and enemy._dash_count == 0, "Recovery must reset the burst")
-	enemy.stop_combat()
-	check(not enemy.is_physics_processing() and not enemy.get_node("MeleeAttack").is_physics_processing(), "Stopping combat must stop movement and contact")
-	check(not enemy.get_node("RouteFeedback")._announced, "Stopping combat must clear feedback")
-	enemy.free()
-	player.global_position = Vector2(5000, 5000)
+	enemy._physics_process(0.0)
+	other._physics_process(0.0)
+	check(enemy._route.vertices.size() == 3, "Open ground must produce three triangle vertices")
+	check(enemy._route.circuit.size() == 3, "Open ground must use three straight sides")
+	for index in range(3):
+		var side: float = enemy._route.vertices[index].distance_to(enemy._route.vertices[(index + 1) % 3])
+		check(is_equal_approx(side, enemy.circuit_side), "Every open-ground side must retain the full configured length")
+	var largest_difference: float = 0.0
+	for step in range(450):
+		player.position = Vector2.from_angle(float(step) * 0.2) * 300.0
+		enemy._physics_process(1.0 / 30.0)
+		other._physics_process(1.0 / 30.0)
+		largest_difference = maxf(largest_difference, enemy.global_position.distance_to(other.global_position))
+	check(largest_difference < 0.01, "Player movement or absence must not change the patrol")
+	check(enemy._completed_laps >= 2, "Triangle must repeat without recovery or wind-up")
+	check(enemy.speed == 120.0, "Triangle must use a moderate obstacle speed")
+	check(enemy.get_node("Visual").frame == 0, "Patrol must not use attack poses")
+	check(not enemy.get_node("RouteFeedback")._announced, "Patrol must not announce attacks at the player")
 
 
-func test_player_abilities() -> void:
-	var abilities = player.get_node("Abilities")
-	var enemy = make_enemy(player.global_position + Vector2(60, 0))
-	enemy.stop_combat()
+func test_near_wall() -> void:
+	make_world()
+	make_wall(Vector2(100, -100), Vector2(20, 400))
+	var enemy := make_enemy(Vector2.ZERO)
 	await settle()
-	abilities.request_action(&"stroke_turn", Vector2.RIGHT)
-	abilities.step(0.3)
-	check(enemy.health.current == 20.0, "Actual slash must damage Triangular")
-	check(not enemy.get_node("HitReaction").is_stunned(), "Slash must not stun Triangular")
-	abilities.request_action(&"double_flick", Vector2.RIGHT)
-	abilities.step(0.1)
-	check(enemy.health.dead, "Actual dash must kill Triangular")
-	abilities.step(0.2)
-	enemy.free()
-	enemy = make_enemy(player.global_position + Vector2(60, 0))
-	enemy.stop_combat()
-	await settle()
-	abilities.update_sustained_action(&"circle", 1.0)
-	abilities.step(0.1)
-	check(enemy.health.current == enemy.health.maximum - 40.0, "Actual spin must damage Triangular")
-	abilities.interrupt()
-	enemy.free()
-	enemy = make_enemy(player.global_position + Vector2(500, 0))
-	enemy.stop_combat()
-	await settle()
-	abilities.request_action(&"cross_nuke", Vector2.ZERO)
-	check(enemy.health.dead, "Actual nuke must find Triangular in the enemies group")
-	enemy.free()
+	enemy._physics_process(0.0)
+	check(enemy._route.vertices.size() == 3, "Nearby wall must allow a rotated full-sized triangle")
+	for index in range(enemy._route.vertices.size()):
+		var side: float = enemy._route.vertices[index].distance_to(enemy._route.vertices[(index + 1) % 3])
+		check(is_equal_approx(side, enemy.circuit_side), "Wall fitting must rotate or relocate instead of shrinking")
+	exercise_lap(enemy, "Nearby wall")
+	exercise_lap(enemy, "Repeated wall-safe loop")
 
 
-func test_contact() -> void:
-	var enemy = make_enemy()
-	enemy.set_physics_process(false)
-	var attack = enemy.get_node("MeleeAttack")
-	var health = player.get_node("Health")
-	health.current = health.maximum
-	health._invulnerability = 0.0
-	var player_offset: Vector2 = player.get_node("Collision").position
-	player.global_position = Vector2(80, 0) - player_offset
+func test_narrow_corridor() -> void:
+	make_world()
+	var room := ROOM.instantiate() as GeneratedRoom
+	world.add_child(room)
+	room.floor_layer.clear()
+	room.wall_layer.clear()
+	var floor_cells: Dictionary = {}
+	for y in range(26):
+		for x in range(26):
+			if y < 5 or x >= 21:
+				var cell := Vector2i(x, y)
+				floor_cells[cell] = true
+				room.floor_layer.set_cell(cell, 0, Vector2i.ZERO)
+	room._walkable_cells = Rules.spacious_cells(floor_cells)
+	room._close_void_edges(floor_cells)
+	room.floor_layer.update_internals()
+	room.wall_layer.update_internals()
+	var location := room.floor_layer.to_global(room.floor_layer.map_to_local(Vector2i(2, 2)))
+	var enemy := make_enemy(location, room)
 	await settle()
-	check(health.current == health.maximum, "Proximity alone must not cause damage")
-	player.global_position = Vector2(34.5, 0) - player_offset
-	await settle()
-	check(health.current == health.maximum - attack.damage, "Body overlap must deal damage")
-	check(not player.get_node("HitReaction").is_stunned(), "Contact must not stun the player")
-	check(player.get_node("HitReaction").impulse == Vector2.ZERO, "Contact must not knock the player back")
-	var after_contact: float = health.current
-	await settle()
-	check(health.current == after_contact, "Continuous contact must respect the hit interval")
-	attack._remaining = 0.0
-	attack.try_hit(player)
-	check(health.current == after_contact, "Player invulnerability must reject repeated damage")
-	player.global_position = Vector2(120, 0) - player_offset
-	attack._remaining = 0.0
-	health._invulnerability = 0.0
-	enemy._dash_direction = Vector2.RIGHT
-	enemy._dash_distance = 240.0
-	enemy.phase = enemy.Phase.RUSH
-	enemy._dash_start = Vector2.ZERO
-	enemy._rush_speed = 1500.0
-	enemy.speed = 1500.0
+	enemy._physics_process(0.0)
+	check(not enemy._route.circuit.is_empty(), "Narrow rooms must still provide a substantial patrol")
+	exercise_lap(enemy, "L-shaped corridor")
+	exercise_lap(enemy, "Repeated corridor patrol")
+
+
+func test_freeze_and_shutdown() -> void:
+	make_world()
+	var enemy := make_enemy(Vector2.ZERO)
 	await settle()
 	enemy._physics_process(0.1)
-	check(health.current == after_contact - attack.damage, "Swept rush must hit across a large physics step")
-	check(enemy.global_position.x > 120.0 and enemy.phase == enemy.Phase.RUSH, "Contact must not block or interrupt the rush")
-	player.global_position = Vector2(400, 0) - player_offset
-	enemy.global_position = Vector2(500, 0)
-	enemy.get_node("RouteFeedback").announce(Vector2(400, 0))
-	enemy.get_node("RouteFeedback").rush(Vector2(300, 0), Vector2(500, 0))
-	attack._remaining = 0.0
-	health._invulnerability = 0.0
-	var before_trail: float = health.current
-	await settle()
-	check(health.current == before_trail, "Trail and marker must never deal damage")
+	var location := enemy.global_position
+	enemy.apply_freeze(1.0)
+	enemy._physics_process(0.5)
+	check(enemy.global_position == location, "Freeze must pause the patrol")
+	enemy.get_node("FreezeStatus").clear()
+	enemy._physics_process(0.1)
+	check(enemy.global_position.distance_to(location) > 1.0, "Patrol must resume after freeze without rebuilding a small circuit")
+	enemy.take_damage(1.0)
+	check(not enemy.get_node("HitReaction").is_stunned(), "Normal damage must not turn an obstacle into a reactive enemy")
+	enemy.stop_combat()
+	location = enemy.global_position
+	enemy._physics_process(1.0)
+	check(enemy.global_position == location, "Game over must stop the patrol")
+	check(not enemy.get_node("MeleeAttack").is_physics_processing(), "Stopping combat must disable contact damage")
 	enemy.take_damage(1000.0)
-	check(enemy.health.dead and not attack.is_physics_processing(), "Death must disable contact immediately")
-	check(not enemy.get_node("RouteFeedback")._announced and not enemy.get_node("RouteFeedback")._rushing, "Death must clear feedback")
+	check(enemy.health.dead, "Obstacle must remain killable")
 	for frame in range(60):
 		await physics_frame
 		if not is_instance_valid(enemy):
 			break
-	check(not is_instance_valid(enemy), "Triangular must finish death and despawn")
-	player.global_position = Vector2(5000, 5000)
+	check(not is_instance_valid(enemy), "Dead obstacle must finish cleanup")
 
 
-func test_obstacles() -> void:
-	player.global_position = Vector2(180, 0)
-	var enemy = make_enemy()
-	enemy.set_physics_process(false)
-	var wall := make_wall(Vector2(120, 0), Vector2(20, 100))
-	await settle()
-	check(not enemy._can_attack(), "Wall must prevent winding up into a blocked player")
-	enemy.phase = enemy.Phase.RUSH
-	enemy._dash_direction = Vector2.RIGHT
-	enemy._dash_distance = 300.0
-	enemy._dash_start = Vector2.ZERO
-	enemy._rush_speed = enemy.speed
-	enemy._physics_process(0.2)
-	check(enemy.phase == enemy.Phase.HUNT and enemy.position.x < 120.0, "Wall collision must end this dash and resume pursuit")
-	check(enemy._dash_count == 1 and not enemy.get_node("RouteFeedback")._announced, "Wall impact must consume a dash and clear feedback")
-	wall.free()
-	enemy.free()
-	# Fits the existing body, but not the old triangular route.
-	var top := make_wall(Vector2(150, -40), Vector2(700, 10))
-	var bottom := make_wall(Vector2(150, 40), Vector2(700, 10))
-	enemy = make_enemy()
-	await settle()
-	for frame in range(90):
-		await physics_frame
-		if enemy.position.x > 100.0:
-			break
-	check(enemy.position.x > 100.0, "Narrow corridor must allow attacking without a triangular route")
-	enemy.free()
-	top.free()
-	bottom.free()
-	enemy = make_enemy()
-	enemy.set_physics_process(false)
-	var other = make_enemy(Vector2(80, 0))
-	other.stop_combat()
-	await settle()
-	check(not enemy.test_move(enemy.global_transform, Vector2(200, 0)), "Triangles must pass through players and other triangles")
-	check(not player.test_move(player.global_transform, Vector2(-200, 0)), "Player must also pass through triangles")
-	enemy.free()
-	other.free()
-	player.global_position = Vector2(5000, 5000)
-
-
-func test_encounter() -> void:
-	var main = MAIN.instantiate()
-	root.add_child(main)
-	var session = main.get_node("GameSession")
-	var spawner = main.get_node("EnemySpawner")
-	var transition = main.get_node("RoomTransition")
-	var hero = main.get_node("Player")
-	hero.set_physics_process(false)
-	transition.door.body_entered.emit(hero)
-	for frame in range(30):
-		await physics_frame
-		if session.room_number == 1:
-			break
-	check(session.room_number == 1 and transition.active_room.exit_door.locked, "Generated encounter must start locked")
-	check(spawner.enemy_scene == TRIANGULAR, "Main scene must spawn Triangular")
-	await settle()
-	for enemy in main.get_node("Enemies").get_children():
-		check(enemy.has_method("_prepare_dash"), "Encounter must contain the burst attacker")
-		check(enemy.collision_mask == 1 and enemy.collision_layer == 8, "Triangle must collide only with walls while remaining attackable")
-		check(enemy.navigation_room == transition.active_room, "Spawner room contract must be preserved")
-		var before: float = enemy.health.current
-		enemy.take_damage(20.0, hero.global_position)
-		check(enemy.health.current == before - 20.0 and not enemy.get_node("HitReaction").is_stunned(), "Player damage must work without stunning")
-		enemy.take_damage(1000.0)
-	check(session.score == 3 and session.room_cleared, "Three defeats must count once and clear the encounter")
-	check(not transition.active_room.exit_door.locked, "Deaths must unlock the exit")
-	transition.door.body_entered.emit(hero)
-	for frame in range(30):
-		await physics_frame
-		if session.room_number == 2:
-			break
-	await settle()
-	hero.get_node("Health")._invulnerability = 0.0
-	hero.take_damage(10000.0)
-	check(session.ended, "Player death must end the session")
-	for enemy in main.get_node("Enemies").get_children():
-		check(not enemy.is_physics_processing() and not enemy.get_node("MeleeAttack").is_physics_processing(), "Game over must stop every Triangular")
-		check(not enemy.get_node("RouteFeedback")._announced, "Game over must remove every marker")
-	main.free()

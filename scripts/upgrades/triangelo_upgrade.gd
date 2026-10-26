@@ -53,7 +53,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if _cooldown > 0.0:
 		return
-	var target := Targets.nearest_visible(self, attack_range)
+	var target := Targets.nearest_visible(self, minf(attack_range, rush_speed * rush_duration), true, actor)
 	if target == null:
 		return
 	_heading = (target.global_position - global_position).normalized()

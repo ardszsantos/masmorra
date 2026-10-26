@@ -44,29 +44,18 @@ func _physics_process(delta: float) -> void:
 	var damage_tick := _tick <= 0.0
 	if damage_tick:
 		_tick = maxf(0.05, tick_interval)
-	for node in get_tree().get_nodes_in_group("enemies"):
-		var enemy := node as Node2D
-		if not Targets.alive(enemy):
-			continue
-		var body_radius := 0.0
-		var collision := enemy.get_node_or_null("Collision") as CollisionShape2D
-		if collision != null and collision.shape is CircleShape2D:
-			body_radius = collision.shape.radius * maxf(absf(collision.global_scale.x), absf(collision.global_scale.y))
-		var distance := global_position.distance_to(enemy.global_position)
-		if distance + body_radius < inner_radius or distance - body_radius > radius:
-			continue
+	for enemy in Targets.touching_ring(self, inner_radius, radius):
 		if inner_radius > 0.0 and _formation_progress() < 1.0:
 			var angle := fposmod((enemy.global_position - global_position).angle() + PI * 0.5 - _age * orbit_speed, TAU)
 			if angle > TAU * _formation_progress():
 				continue
-		if Targets.clear_path(self, enemy.global_position):
-			if enemy.has_method("apply_burn"):
-				enemy.apply_burn(burn_duration, burn_damage_per_second, actor)
-			if damage_tick:
-				enemy.take_damage(damage, global_position)
-				# Killing the last enemy may end the encounter and clear all effects.
-				if is_queued_for_deletion():
-					return
+		if enemy.has_method("apply_burn"):
+			enemy.apply_burn(burn_duration, burn_damage_per_second, actor)
+		if damage_tick:
+			enemy.take_damage(damage, global_position)
+			# Killing the last enemy may end the encounter and clear all effects.
+			if is_queued_for_deletion():
+				return
 	queue_redraw()
 
 

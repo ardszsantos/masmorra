@@ -51,6 +51,9 @@ func try_activate(direction: Vector2) -> bool:
 	slash_started.emit(_direction)
 	return true
 
+func get_activation_failure(direction: Vector2) -> StringName:
+	return &"direction" if direction.is_zero_approx() else super.get_activation_failure(direction)
+
 func _update_visual() -> void:
 	var player_position: Vector2 = get_parent().get_parent().global_position
 	_visual.global_position = player_position

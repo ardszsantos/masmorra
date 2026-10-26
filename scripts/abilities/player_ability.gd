@@ -17,6 +17,10 @@ func try_activate(_direction: Vector2) -> bool:
 	return false
 
 
+func get_activation_failure(_direction: Vector2) -> StringName:
+	return &"unavailable"
+
+
 func step(_delta: float) -> void:
 	pass
 
