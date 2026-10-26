@@ -196,14 +196,87 @@ func run() -> void:
 	touch.pressed = false
 	pad._input(touch)
 	check(pad.touch_index == -1 and pad._points.is_empty(), "Completed touch must end even when the ability is unavailable")
+	check(pad._queue_failed and queue_hud._failed, "Missing ability must mark both gesture displays red")
 	abilities.request_action(&"stroke_turn", Vector2.RIGHT)
 	check(abilities.get_child_count() == 3, "Slash removal failed")
 	abilities.grant_ability(preload("res://scenes/abilities/slash.tscn"))
 	abilities.request_action(&"stroke_turn", Vector2.RIGHT)
 	check(abilities.get_node("Slash").active, "Reequipped slash failed")
+	check(pad._queue_completed and queue_hud._completed, "Accepted action must update both gesture displays together")
 	main.free()
+	await test_gesture_result_feedback()
 	print("Controls tests: ", failures, " failures")
 	quit(1 if failures else 0)
+
+
+func complete_stroke(gesture: Node, origin: Vector2, direction: Vector2) -> void:
+	gesture.begin(origin)
+	gesture.sample(origin + direction * 120.0)
+	gesture.end()
+
+
+func complete_cross(gesture: Node) -> void:
+	var center := Vector2(300, 500)
+	gesture.begin(center)
+	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+		gesture.sample(center + direction * 100.0)
+		gesture.sample(center)
+	gesture.end()
+
+
+func test_gesture_result_feedback() -> void:
+	var main := preload("res://scenes/main.tscn").instantiate()
+	root.add_child(main)
+	await process_frame
+	var player := main.get_node("Player")
+	player.set_physics_process(false)
+	player.get_node("Stamina").set_physics_process(false)
+	var gesture := main.get_node("StrokeGesture")
+	var abilities := player.get_node("Abilities")
+	var pad := main.get_node("HUD/StrokePad")
+	var hud := main.get_node("HUD/GestureQueueHud")
+
+	complete_stroke(gesture, Vector2(180, 300), Vector2.UP)
+	check(not pad._queue_completed and not pad._queue_failed, "Single pending stroke must stay neutral on screen")
+	check(not hud._completed and not hud._failed, "Single pending stroke must stay neutral in the queue")
+	complete_stroke(gesture, Vector2(350, 300), Vector2.UP)
+	check(abilities.get_node("Dash").active, "Feedback fixture must activate the real dash")
+	check(pad._queue_completed and not pad._queue_failed, "Successful dash arrows must turn green")
+	check(hud._completed and not hud._failed, "Successful dash tokens must turn green")
+	check(pad._queued_directions.size() == 2 and hud.queued_directions.size() == 2, "Dash feedback must retain both completed strokes")
+
+	abilities.interrupt()
+	gesture.reset()
+	complete_stroke(gesture, Vector2(180, 300), Vector2.UP)
+	complete_stroke(gesture, Vector2(350, 300), Vector2.UP)
+	check(not abilities.get_node("Dash").active, "Dash cooldown must reject an immediate repeat")
+	check(pad._queue_failed and not pad._queue_completed, "Cooldown rejection must turn arrows red")
+	check(hud._failed and not hud._completed, "Cooldown rejection must turn queue tokens red")
+
+	gesture.reset()
+	complete_cross(gesture)
+	check(pad._queued_directions.size() == 4 and hud.queued_directions.size() == 4, "Cross feedback must retain all four arms")
+	check(pad._queue_completed and not pad._queue_failed, "Successful cross arrows must turn green")
+	check(hud._completed and not hud._failed, "Successful cross tokens must turn green")
+
+	gesture.reset()
+	abilities.disabled = true
+	complete_cross(gesture)
+	check(pad._queue_failed and not pad._queue_completed, "Disabled action must turn cross arrows red")
+	check(hud._failed and not hud._completed, "Disabled action must turn cross tokens red")
+	check(pad._queued_directions.size() == 4 and hud.queued_directions.size() == 4, "Rejected cross feedback must retain all four arms")
+
+	pad._process(2.0)
+	hud._process(2.0)
+	abilities.action_resolved.emit(true)
+	check(pad._queue_remaining == 0.0, "Late action result must not revive expired arrows")
+	check(not hud.visible and hud.queued_directions.is_empty(), "Late action result must not revive expired queue tokens")
+	gesture.reset()
+	complete_stroke(gesture, Vector2(180, 300), Vector2.RIGHT)
+	check(not pad._queue_completed and not pad._queue_failed, "Fresh stroke must clear the previous result from arrows")
+	check(not hud._completed and not hud._failed, "Fresh stroke must clear the previous result from queue tokens")
+	main.free()
+
 
 func test_new_gestures() -> void:
 	var gesture := preload("res://scripts/input/stroke_gesture.gd").new()

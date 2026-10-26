@@ -23,6 +23,7 @@ func run() -> void:
 	var spawner = main.get_node("EnemySpawner")
 	# This suite covers the original pursuer's melee range, stun and knockback.
 	spawner.enemy_scene = preload("res://scenes/enemy.tscn")
+	spawner.enemy_variants.clear()
 	var session = main.get_node("GameSession")
 	check(not spawner.enabled, "Lobby without spawn points must not start spawning")
 	check(spawner.get_node("SpawnTimer").is_stopped(), "Lobby must not run the spawn timer")
