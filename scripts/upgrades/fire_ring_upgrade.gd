@@ -1,13 +1,14 @@
 extends "res://scripts/upgrades/passive_upgrade.gd"
 
 func details() -> String:
-	return "Forma uma barreira de fogo ao seu redor, que acompanha você, causa dano e queima inimigos.\n\nAtual: %.1f de dano por pulso; duração %.1f s; intervalo %.2f s. Queimadura: %.1f de dano/s por %.1f s.\nPor nível: +%.1f de dano por pulso, +%.1f de dano/s na queimadura e +10%% da frequência base. O intervalo nunca fica abaixo da duração do anel + 0,5 s.\nNovo contato renova a queimadura sem empilhar seu dano." % [damage_per_tick + damage_per_level * (level - 1), duration, maxf(duration + 0.5, cooldown / (1.0 + 0.1 * (level - 1))), burn_damage_per_second + damage_per_level * (level - 1), burn_duration, damage_per_level, damage_per_level]
+	return "Só ativa quando um inimigo alcançável toca a faixa do anel. Forma imediatamente uma barreira de fogo que acompanha você, causa dano e queima inimigos. Sem contato, guarda a recarga.\n\nAtual: %.1f de dano por pulso; duração %.1f s; intervalo %.2f s. Queimadura: %.1f de dano/s por %.1f s.\nPor nível: +%.1f de dano por pulso, +%.1f de dano/s na queimadura e +10%% da frequência base. O intervalo nunca fica abaixo da duração do anel + 0,5 s.\nNovo contato renova a queimadura sem empilhar seu dano." % [damage_per_tick + damage_per_level * (level - 1), duration, maxf(duration + 0.5, cooldown / (1.0 + 0.1 * (level - 1))), burn_damage_per_second + damage_per_level * (level - 1), burn_duration, damage_per_level, damage_per_level]
 
 const Fire = preload("res://scripts/upgrades/fire_area.gd")
+const Targets = preload("res://scripts/upgrades/upgrade_targets.gd")
 
 @export var cooldown: float = 6.0
 @export var duration: float = 2.2
-@export_range(0.0, 2.0, 0.05) var formation_duration: float = 0.55
+@export_range(0.0, 2.0, 0.05) var formation_duration: float = 0.0
 @export var radius: float = 105.0
 @export var thickness: float = 32.0
 @export var damage_per_tick: float = 10.0
@@ -24,6 +25,10 @@ func _physics_process(delta: float) -> void:
 	_remaining = maxf(0.0, _remaining - delta)
 	if _remaining > 0.0:
 		return
+	if actor.get_node("Health").dead:
+		return
+	if Targets.touching_ring(actor, maxf(0.0, radius - thickness), radius).is_empty():
+		return
 	var ring := Fire.new()
 	ring.actor = actor
 	ring.upgrade_owner = self
@@ -38,3 +43,8 @@ func _physics_process(delta: float) -> void:
 	combat_room.add_child(ring)
 	ring.global_position = actor.global_position
 	_remaining = maxf(duration + 0.5, cooldown / (1.0 + 0.1 * (level - 1)))
+
+
+func set_combat_context(room: Node2D, active: bool) -> void:
+	super.set_combat_context(room, active)
+	_remaining = 0.0

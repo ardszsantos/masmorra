@@ -1,9 +1,7 @@
 extends "res://scripts/upgrades/passive_upgrade.gd"
 
-func details() -> String:
-	return "Congela automaticamente o inimigo próximo e visível mais próximo, impedindo movimento e ataques.\n\nAtual: congelamento de %.2f s; intervalo %.2f s.\nPor nível: +%.2f s de congelamento (máximo %.2f s) e +8%% da frequência base. Intervalo mínimo: 1 s. Sem alvo, aguarda pronto para atacar." % [minf(maximum_duration, freeze_duration + duration_per_level * (level - 1)), maxf(1.0, cooldown / (1.0 + 0.08 * (level - 1))), duration_per_level, maximum_duration]
-
 const Targets = preload("res://scripts/upgrades/upgrade_targets.gd")
+const Wave = preload("res://scripts/upgrades/gorgon_wave.gd")
 const EYE = preload("res://assets/sprites/item-upgrades/gorgon-eye/eye-icon.png")
 
 @export var cooldown: float = 6.0
@@ -11,38 +9,76 @@ const EYE = preload("res://assets/sprites/item-upgrades/gorgon-eye/eye-icon.png"
 @export var freeze_duration: float = 2.5
 @export var duration_per_level: float = 0.3
 @export var maximum_duration: float = 5.0
+@export_range(1, 10, 1) var base_targets: int = 2
+@export_range(1, 5, 1) var targets_per_level: int = 1
+@export_range(20.0, 160.0, 5.0) var wave_arc_degrees: float = 80.0
+@export_range(0.1, 1.0, 0.05) var wave_duration: float = 0.45
 
 var _remaining: float = 0.0
-var _beam_time: float = 0.0
-var _beam_target := Vector2.ZERO
+
+
+func details() -> String:
+	return "Emite uma onda paralisante em cone na direção do alvo visível mais próximo. Paredes bloqueiam a onda.\n\nAtual: até %d inimigos por onda; alcance %.0f; cone de %.0f°; paralisia de %.2f s; intervalo %.2f s.\nPor nível: +%d inimigo por onda, +%.2f s de paralisia (máximo %.2f s) e +8%% da frequência base. Intervalo mínimo: 1 s. Sem alvo alcançável, guarda a recarga." % [target_capacity(), detection_radius, wave_arc_degrees, current_freeze_duration(), fire_interval(), targets_per_level, duration_per_level, maximum_duration]
+
+
+func target_capacity() -> int:
+	return base_targets + targets_per_level * (level - 1)
+
+
+func current_freeze_duration() -> float:
+	return minf(maximum_duration, freeze_duration + duration_per_level * (level - 1))
+
+
+func fire_interval() -> float:
+	return maxf(1.0, cooldown / (1.0 + 0.08 * (level - 1)))
+
+
+func set_level(rank: int) -> void:
+	super.set_level(rank)
+	_remaining = minf(_remaining, fire_interval())
 
 
 func set_combat_context(room: Node2D, active: bool) -> void:
 	super.set_combat_context(room, active)
 	visible = is_instance_valid(room)
-	_beam_time = 0.0
-	queue_redraw()
+	_remaining = 0.0
 
 
 func _physics_process(delta: float) -> void:
-	if not combat_active or not is_instance_valid(actor):
+	if not combat_active or not is_instance_valid(actor) or not is_instance_valid(combat_room):
 		return
+	if actor.get_node("Health").dead:
+		return
+	_sync_attachment()
 	_remaining = maxf(0.0, _remaining - delta)
-	_beam_time = maxf(0.0, _beam_time - delta)
-	if _remaining <= 0.0:
-		var target := Targets.nearest_visible(actor, detection_radius)
-		if target != null and target.has_method("apply_freeze"):
-			_beam_target = target.global_position
-			global_rotation = (_beam_target - global_position).angle()
-			target.apply_freeze(minf(maximum_duration, freeze_duration + duration_per_level * (level - 1)))
-			_remaining = maxf(1.0, cooldown / (1.0 + 0.08 * (level - 1)))
-			_beam_time = 0.25
-	queue_redraw()
+	var target: Node2D
+	for candidate in Targets.visible_enemies(actor, detection_radius):
+		if candidate.has_method("apply_freeze") and Targets.clear_path(self, candidate.global_position):
+			target = candidate
+			break
+	if target == null:
+		return
+	var heading := (target.global_position - actor.global_position).normalized()
+	if heading.is_zero_approx():
+		heading = Vector2.RIGHT
+	global_rotation = heading.angle()
+	if _remaining > 0.0:
+		return
+	var wave := Wave.new()
+	wave.actor = actor
+	wave.upgrade_owner = self
+	wave.heading = heading
+	wave.radius = detection_radius
+	wave.arc_degrees = wave_arc_degrees
+	wave.duration = wave_duration
+	wave.freeze_duration = current_freeze_duration()
+	wave.target_limit = target_capacity()
+	combat_room.add_child(wave)
+	wave.global_position = actor.global_position
+	_remaining = fire_interval()
 
 
 func _draw() -> void:
 	var dimensions := EYE.get_size()
 	dimensions *= 30.0 / maxf(dimensions.x, dimensions.y)
 	draw_texture_rect(EYE, Rect2(-dimensions * 0.5, dimensions), false)
-	if _beam_time > 0.0:
-		draw_line(Vector2.ZERO, to_local(_beam_target), Color(0.5, 1.0, 0.8, _beam_time * 4.0), 3.0, true)
