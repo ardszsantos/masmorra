@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/set_square_ability.gd" id="1"]
+
+[node name="SetSquare" type="Node"]
+script = ExtResource("1")
+ability_id = &"set_square"
+trigger_id = &"set_square"
+overrides_movement = false
+blocks_other_actions = false
+stamina_cost = 15.0

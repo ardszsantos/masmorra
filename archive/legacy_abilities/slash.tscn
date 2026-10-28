@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/abilities/slash_ability.gd" id="1"]
+[ext_resource type="Script" path="res://archive/legacy_abilities/slash_ability.gd" id="1"]
 
 [node name="Slash" type="Node"]
 script = ExtResource("1")

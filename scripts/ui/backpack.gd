@@ -1,9 +1,11 @@
 extends ScrollContainer
 
+signal pause_changed(open: bool)
+
 @export var toggle_button: Button
 @export var upgrades: Node
 @export var transition: Node
-@export_range(1, 12, 1) var minimum_slots: int = 6
+const SLOT_COUNT: int = preload("res://scripts/upgrades/upgrade_controller.gd").SLOT_COUNT
 var _slots: VBoxContainer
 var _details_overlay: Control
 var _details_title: Label
@@ -11,6 +13,8 @@ var _details_text: RichTextLabel
 var _selected_id: StringName
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	toggle_button.process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
 	toggle_button.hide()
 	_slots = VBoxContainer.new()
@@ -33,7 +37,7 @@ func _refresh() -> void:
 		_slots.remove_child(child)
 		child.queue_free()
 	var rewards: Array[Resource] = upgrades.equipped_rewards()
-	for index in range(maxi(minimum_slots, rewards.size())):
+	for index in range(SLOT_COUNT):
 		var slot := Button.new()
 		slot.focus_mode = Control.FOCUS_NONE
 		slot.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
@@ -77,10 +81,12 @@ func _toggle_backpack(open: bool) -> void:
 	visible = open
 	if not open:
 		_details_overlay.hide()
+	pause_changed.emit(open)
 
 
 func _build_details() -> void:
 	_details_overlay = Control.new()
+	_details_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	_details_overlay.name = "UpgradeDetails"
 	_details_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_details_overlay.hide()

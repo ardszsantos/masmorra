@@ -6,6 +6,9 @@ var ended: bool = false
 var room_number: int = 0
 var completed_rooms: int = 0
 var room_cleared: bool = false
+var resume_remaining: int = -1
+var resume_cleared: bool = false
+var resume_offer_ids: Array = []
 @onready var player = $"../Player"
 @onready var spawner = $"../EnemySpawner"
 @onready var stats = $"../HUD/StatusHud/Stats"
@@ -36,11 +39,27 @@ func _room_entered(room: Node2D) -> void:
 	if not rewards.prepare_room(room, player):
 		_game_over()
 		return
+	if not resume_offer_ids.is_empty():
+		rewards.restore_offers(room, player, resume_offer_ids)
+		resume_offer_ids.clear()
 	room.set_exits_locked(true)
 	upgrades.set_combat_context(room, true)
+	player.get_node("Abilities").set_combat_context(room, true)
 	var positions: PackedVector2Array = room.enemy_spawn_positions(spawner.minimum_player_distance, spawner.minimum_door_distance)
 	var count := initial_enemies + (room_number - 1) * enemies_per_room
-	spawner.begin_encounter(positions, count)
+	if resume_cleared:
+		room_cleared = true
+		upgrades.set_combat_context(room, false)
+		player.get_node("Abilities").set_combat_context(room, false)
+		rewards.unlock_choices()
+		stats.get_node("EncounterLabel").text = "Escolha uma saída: 1 recompensa"
+		room.set_exits_locked(false)
+	elif resume_remaining >= 0:
+		spawner.begin_encounter(positions, maxi(1, resume_remaining))
+	else:
+		spawner.begin_encounter(positions, count)
+	resume_remaining = -1
+	resume_cleared = false
 
 func _encounter_progress(defeated: int, total: int) -> void:
 	if not ended:
@@ -52,6 +71,7 @@ func _room_completed() -> void:
 	room_cleared = true
 	completed_rooms += 1
 	upgrades.set_combat_context(transition.active_room, false)
+	player.get_node("Abilities").set_combat_context(transition.active_room, false)
 	rewards.unlock_choices()
 	stats.get_node("EncounterLabel").text = "Escolha uma saída: 1 recompensa"
 	transition.active_room.set_exits_locked(false)
@@ -74,6 +94,7 @@ func _enemy_defeated(_enemy: Node) -> void:
 
 func _game_over() -> void:
 	ended = true
+	$"../RunCheckpoint".clear_checkpoint()
 	rewards.hide_choices()
 	spawner.stop()
 	transition.stop()

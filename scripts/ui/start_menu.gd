@@ -14,15 +14,20 @@ const PAPER := Color("f0eeee")
 const LIST_TOP: float = 410.0
 const LIST_WIDTH: float = 621.0
 const MAP_LIST_BOTTOM: float = 986.0
+const CHARACTER_INFO_SCENES: Dictionary = {
+	&"Nerd": preload("res://scenes/nerd_kit_page.tscn"),
+}
 
 var _home: Control
 var _characters: Control
+var _kit: Control
 var _maps: Control
 var _map_rows: VBoxContainer
 var _status: Label
 var _selection_status: Label
 var _selected_character: StringName = &"Nerd"
 var _play_button: Button
+var _continue_button: Button
 var _all_maps_button: Button
 
 
@@ -41,9 +46,11 @@ func _build_pages() -> void:
 	add_child(backdrop)
 
 	_home = _new_page("Masmorra", "v01.  la ele")
-	_play_button = _add_action(_home, "Play", 503.0, 77.0, _start_run)
-	_add_action(_home, "Characters", 640.0, 77.0, _open_characters)
-	_add_action(_home, "Maps", 775.0, 77.0, _open_maps)
+	_continue_button = _add_action(_home, "Continuar", 503.0, 77.0, _continue_run)
+	_play_button = _add_action(_home, "Nova partida", 603.0, 77.0, _start_run)
+	(_play_button.get_child(0) as Label).add_theme_font_size_override("font_size", 28)
+	_add_action(_home, "Characters", 703.0, 77.0, _open_characters)
+	_add_action(_home, "Maps", 803.0, 77.0, _open_maps)
 	_status = _label(_home, "", 24, PAPER)
 	_status.position = Vector2(24.0, 1120.0)
 	_status.size = Vector2(610.0, 48.0)
@@ -59,6 +66,8 @@ func _build_pages() -> void:
 	_add_character_choice(character_list, "?", false)
 	_add_character_choice(character_list, "?", false)
 	_add_action(_characters, "Back", 1060.0, 77.0, _open_home)
+	_kit = create_selected_character_info()
+	_kit.connect("closed", _open_characters)
 
 	_maps = _new_page("Maps", "", true)
 	_all_maps_button = _add_action(_maps, "", LIST_TOP, 64.0, _toggle_all_maps, LIST_WIDTH)
@@ -77,7 +86,7 @@ func _build_pages() -> void:
 	_add_action(_maps, "Back", 1060.0, 77.0, _open_home)
 	_refresh_maps()
 
-	for page in [_home, _characters, _maps]:
+	for page in [_home, _characters, _maps, _kit]:
 		add_child(page)
 	_selection_status = _label(self, "%s Selected" % _selected_character, 26, PAPER)
 	_selection_status.position = Vector2(70.0, 980.0)
@@ -129,6 +138,9 @@ func _add_action(page: Control, text: String, top: float, height: float,
 
 
 func _add_character_choice(parent: VBoxContainer, text: String, unlocked: bool) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(0.0, 112.0)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -151,8 +163,19 @@ func _add_character_choice(parent: VBoxContainer, text: String, unlocked: bool) 
 		style.content_margin_left = 70.0
 		style.content_margin_right = 14.0
 	if unlocked:
-		button.pressed.connect(_select_nerd)
-	parent.add_child(button)
+		button.pressed.connect(_select_character.bind(StringName(text)))
+	row.add_child(button)
+	if unlocked:
+		var info := Button.new()
+		info.text = "i"
+		info.tooltip_text = "Ver habilidades de %s" % text
+		info.custom_minimum_size = Vector2(88.0, 112.0)
+		info.add_theme_font_size_override("font_size", 38)
+		info.add_theme_stylebox_override("normal", _strip_style(STRIP))
+		info.add_theme_stylebox_override("hover", _strip_style(STRIP_HOVER))
+		info.add_theme_stylebox_override("pressed", _strip_style(STRIP_PRESSED))
+		info.pressed.connect(_open_character_info.bind(StringName(text)))
+		row.add_child(info)
 
 
 func _strip_style(color: Color) -> StyleBoxFlat:
@@ -180,6 +203,7 @@ func _label(parent: Control, text: String, font_size: int, color: Color) -> Labe
 
 
 func _open_home() -> void:
+	_update_play_state()
 	_show_page(_home)
 
 
@@ -195,15 +219,39 @@ func _open_maps() -> void:
 func _show_page(page: Control) -> void:
 	_home.hide()
 	_characters.hide()
+	_kit.hide()
 	_maps.hide()
 	page.show()
 	_selection_status.visible = page == _home or page == _characters
 	_selection_status.text = "%s Selected" % _selected_character
 
 
-func _select_nerd() -> void:
-	_selected_character = &"Nerd"
+func _select_character(character_id: StringName) -> void:
+	_selected_character = character_id
 	_show_page(_home)
+
+func _open_character_info(character_id: StringName) -> void:
+	var page := _create_character_info(character_id)
+	if page == null:
+		return
+	remove_child(_kit)
+	_kit.queue_free()
+	_kit = page
+	_kit.connect("closed", _open_characters)
+	add_child(_kit)
+	_show_page(_kit)
+
+func create_selected_character_info() -> Control:
+	return _create_character_info(_selected_character)
+
+func _create_character_info(character_id: StringName) -> Control:
+	var scene := CHARACTER_INFO_SCENES.get(character_id) as PackedScene
+	if scene == null:
+		return null
+	var page := scene.instantiate() as Control
+	if page.has_method("set_ui_font"):
+		page.set("ui_font", ui_font)
+	return page
 
 
 func _refresh_maps() -> void:
@@ -278,6 +326,9 @@ func _toggle_all_maps() -> void:
 
 func _update_play_state() -> void:
 	_play_button.disabled = not transition.can_start_run()
+	_continue_button.visible = $"../../RunCheckpoint".has_checkpoint()
+	_continue_button.disabled = not transition.can_start_run()
+	_play_button.position.y = 603.0 if _continue_button.visible else 503.0
 	if _play_button.disabled:
 		_status.text = "Select at least one map to play."
 	else:
@@ -285,9 +336,17 @@ func _update_play_state() -> void:
 
 
 func _start_run() -> void:
-	if transition.start_run():
+	if $"../../RunCheckpoint".start_new_run():
 		_play_button.disabled = true
-		_status.text = "Preparing the first room…"
+		_continue_button.disabled = true
+		_status.text = "Preparando a primeira sala…"
+
+
+func _continue_run() -> void:
+	if $"../../RunCheckpoint".continue_run():
+		_play_button.disabled = true
+		_continue_button.disabled = true
+		_status.text = "Carregando a run…"
 
 
 func _on_run_started(_room: Node2D) -> void:

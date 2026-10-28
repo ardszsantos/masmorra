@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://gtcqv5l4i2b8" path="res://scenes/triangular.tscn" id="7_enemy"]
 [ext_resource type="Script" uid="uid://beg7gdlbmokni" path="res://scripts/ui/settings_menu.gd" id="8_settings"]
 [ext_resource type="Script" uid="uid://plbfj6tjoi5g" path="res://scripts/ui/gesture_queue_hud.gd" id="9_queue"]
-[ext_resource type="Script" path="res://scripts/ui/gesture_feedback.gd" id="28_feedback"]
 [ext_resource type="Script" uid="uid://ccbhgda6fwwyh" path="res://scripts/gameplay/room_transition.gd" id="10_transition"]
 [ext_resource type="PackedScene" uid="uid://bk7awttniyf5d" path="res://scenes/generated_room.tscn" id="11_arena"]
 [ext_resource type="Script" uid="uid://by31lcl7wc06y" path="res://scripts/gameplay/room_rewards.gd" id="12_rewards"]
@@ -20,12 +19,16 @@
 [ext_resource type="Resource" uid="uid://b8trtm0xn5vxe" path="res://resources/rewards/gorgon.tres" id="19_gorgon_reward"]
 [ext_resource type="Resource" uid="uid://barn2neqv7bw0" path="res://resources/rewards/fire_ring.tres" id="20_ring_reward"]
 [ext_resource type="Resource" path="res://resources/rewards/triangelo.tres" id="21_triangelo_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/health.tres" id="26_health_reward"]
-[ext_resource type="Resource" path="res://resources/rewards/stamina.tres" id="27_stamina_reward"]
 [ext_resource type="Script" uid="uid://r0q8ay1mx5e8" path="res://scripts/ui/reward_guides.gd" id="22_reward_guides"]
 [ext_resource type="PackedScene" path="res://scenes/purple_head.tscn" id="23_purple_head"]
 [ext_resource type="Script" uid="uid://bjnuijmvgneu2" path="res://scripts/ui/backpack.gd" id="24_backpack"]
 [ext_resource type="Texture2D" uid="uid://xxi4db6oxvq7" path="res://assets/upgrades/backpack.svg" id="25_backpack_icon"]
+[ext_resource type="Resource" path="res://resources/rewards/health.tres" id="26_health_reward"]
+[ext_resource type="Resource" path="res://resources/rewards/stamina.tres" id="27_stamina_reward"]
+[ext_resource type="Script" uid="uid://rpsn8xnfmlb5" path="res://scripts/ui/gesture_feedback.gd" id="28_feedback"]
+[ext_resource type="Script" path="res://scripts/ui/knowledge_hud.gd" id="29_knowledge"]
+[ext_resource type="Script" path="res://scripts/ui/menu_pause.gd" id="30_menu_pause"]
+[ext_resource type="Script" path="res://scripts/gameplay/run_checkpoint.gd" id="31_run_checkpoint"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8vrlf"]
 
@@ -83,6 +86,13 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_v5gy4")
 step = 0.1
 value = 100.0
 
+[node name="KnowledgeHud" type="Control" parent="HUD/StatusHud/Stats" node_paths=PackedStringArray("knowledge")]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("29_knowledge")
+knowledge = NodePath("../../../../Player/Knowledge")
+
 [node name="BackpackButton" type="Button" parent="HUD/StatusHud/Stats" unique_id=930676280]
 visible = false
 custom_minimum_size = Vector2(64, 64)
@@ -136,7 +146,7 @@ grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("9_queue")
 
-[node name="GestureFailureLabel" type="Label" parent="HUD"]
+[node name="GestureFailureLabel" type="Label" parent="HUD" unique_id=555282161]
 visible = false
 anchors_preset = 12
 anchor_top = 1.0
@@ -148,7 +158,6 @@ offset_right = -24.0
 offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.45, 0.4, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 1
@@ -157,7 +166,7 @@ theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GestureFeedback" type="Node" parent="HUD" node_paths=PackedStringArray("abilities", "stroke_pad", "queue_hud", "failure_label", "stamina_bar")]
+[node name="GestureFeedback" type="Node" parent="HUD" unique_id=457837372 node_paths=PackedStringArray("abilities", "stroke_pad", "queue_hud", "failure_label", "stamina_bar")]
 script = ExtResource("28_feedback")
 abilities = NodePath("../../Player/Abilities")
 stroke_pad = NodePath("../StrokePad")
@@ -232,6 +241,14 @@ custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 text = "Voltar ao menu"
 
+[node name="CharacterInfo" type="Button" parent="HUD/SettingsMenu/SettingsPanel/Margin/Options"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+text = "Info do personagem"
+
+[node name="GuideLayer" type="CanvasLayer" parent="HUD/SettingsMenu"]
+layer = 20
+
 [node name="RewardGuides" type="Control" parent="HUD" unique_id=15139481 node_paths=PackedStringArray("rewards", "player")]
 layout_mode = 3
 anchors_preset = 15
@@ -278,10 +295,21 @@ player = NodePath("../Player")
 stroke_pad = NodePath("../HUD/StrokePad")
 stroke_gesture = NodePath("../StrokeGesture")
 
+[node name="MenuPause" type="Node" parent="."]
+process_mode = 3
+script = ExtResource("30_menu_pause")
+
+[node name="RunCheckpoint" type="Node" parent="."]
+process_mode = 3
+script = ExtResource("31_run_checkpoint")
+
+[connection signal="pause_changed" from="HUD/SettingsMenu" to="MenuPause" method="set_settings_open"]
+[connection signal="pause_changed" from="HUD/Backpack" to="MenuPause" method="set_backpack_open"]
 [connection signal="stroke_ended" from="HUD/StrokePad" to="StrokeGesture" method="end"]
 [connection signal="stroke_sampled" from="HUD/StrokePad" to="StrokeGesture" method="sample"]
 [connection signal="stroke_started" from="HUD/StrokePad" to="StrokeGesture" method="begin"]
 [connection signal="action_requested" from="StrokeGesture" to="Player" method="request_action"]
+[connection signal="gesture_rejected" from="StrokeGesture" to="HUD/GestureFeedback" method="reject_gesture"]
 [connection signal="direction_changed" from="StrokeGesture" to="Player" method="set_movement_direction"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/StrokePad" method="complete_queued_gesture"]
 [connection signal="gesture_completed" from="StrokeGesture" to="HUD/GestureQueueHud" method="complete_queued_gesture"]
