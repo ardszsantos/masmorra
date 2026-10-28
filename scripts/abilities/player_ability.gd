@@ -5,6 +5,7 @@ extends Node
 @export var trigger_id: StringName
 @export var sustained: bool = false
 @export var overrides_movement: bool = true
+@export var blocks_other_actions: bool = true
 @export var stamina_cost: float = 0.0
 @export var stamina_per_second: float = 0.0
 var active: bool = false

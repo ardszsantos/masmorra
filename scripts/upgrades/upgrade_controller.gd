@@ -5,6 +5,7 @@ signal changed
 
 const Passive = preload("res://scripts/upgrades/passive_upgrade.gd")
 const Reward = preload("res://scripts/gameplay/room_reward.gd")
+const SLOT_COUNT: int = 8
 
 var _equipped: Dictionary = {}
 var _definitions: Dictionary = {}
@@ -31,6 +32,8 @@ func details_of(id: StringName) -> String:
 func grant_upgrade(reward: Reward) -> bool:
 	if _stopped or reward == null or reward.upgrade_scene == null:
 		return false
+	if not can_equip(reward.reward_id):
+		return false
 	var effect := _equipped.get(reward.reward_id) as Passive
 	if is_instance_valid(effect):
 		effect.set_level(effect.level + 1)
@@ -48,6 +51,10 @@ func grant_upgrade(reward: Reward) -> bool:
 		_definitions[reward.reward_id] = reward
 	changed.emit()
 	return true
+
+
+func can_equip(id: StringName) -> bool:
+	return _equipped.has(id) or _equipped.size() < SLOT_COUNT
 
 
 func remove_upgrade(id: StringName) -> void:

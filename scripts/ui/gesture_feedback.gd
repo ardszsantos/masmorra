@@ -44,6 +44,10 @@ func _on_action_failed(reason: StringName) -> void:
 		_blink_stamina()
 		return
 	match reason:
+		&"returning":
+			failure_label.text = "Aguarde o esquadro voltar."
+		&"gesture_angle":
+			failure_label.text = "Repita, vire para o lado ou inverta a direção."
 		&"cooldown":
 			failure_label.text = "Aguarde a habilidade recarregar."
 		&"stunned":
@@ -59,6 +63,10 @@ func _on_action_failed(reason: StringName) -> void:
 	failure_label.show()
 	_message_remaining = message_duration
 	set_process(true)
+
+func reject_gesture(reason: StringName) -> void:
+	_on_action_resolved(false)
+	_on_action_failed(reason)
 
 func _blink_stamina() -> void:
 	if _blink != null:

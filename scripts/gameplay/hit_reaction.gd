@@ -19,7 +19,7 @@ func apply(source: Vector2) -> void:
 	flash()
 	var abilities = get_parent().get_node_or_null("Abilities")
 	if abilities != null:
-		abilities.interrupt()
+		abilities.interrupt(false)
 
 func flash() -> void:
 	if _flash != null and _flash.is_valid():

@@ -199,7 +199,7 @@ func run() -> void:
 	check(pad._queue_failed and queue_hud._failed, "Missing ability must mark both gesture displays red")
 	abilities.request_action(&"stroke_turn", Vector2.RIGHT)
 	check(abilities.get_child_count() == 3, "Slash removal failed")
-	abilities.grant_ability(preload("res://scenes/abilities/slash.tscn"))
+	abilities.grant_ability(preload("res://archive/legacy_abilities/slash.tscn"))
 	abilities.request_action(&"stroke_turn", Vector2.RIGHT)
 	check(abilities.get_node("Slash").active, "Reequipped slash failed")
 	check(pad._queue_completed and queue_hud._completed, "Accepted action must update both gesture displays together")

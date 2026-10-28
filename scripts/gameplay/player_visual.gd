@@ -9,6 +9,7 @@ const DIRECTION_STEP: float = TAU / 8.0
 
 var _facing_index: int = 2
 var _dash: DashAbility
+var _action_pose: bool = false
 @onready var _body: CharacterBody2D = get_parent() as CharacterBody2D
 @onready var _abilities: Node = $"../Abilities"
 @onready var _back_socket: Node2D = $BackSocket
@@ -52,8 +53,19 @@ func _update_attachment_pose() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if _dash == null:
+	if _dash == null and not _action_pose:
 		_update_locomotion()
+
+func begin_action_pose(direction: Vector2) -> void:
+	_action_pose = true
+	_face_direction(direction)
+	_play_directional_animation(&"idle")
+	pause()
+
+func end_action_pose() -> void:
+	_action_pose = false
+	_update_locomotion()
+	play()
 
 
 func _update_locomotion() -> void:

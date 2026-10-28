@@ -28,6 +28,7 @@ func prepare_room(room: GeneratedRoom, player: CharacterBody2D) -> bool:
 	_available = false
 	_claimed = false
 	var options: Array[Reward] = []
+	var upgrades := player.get_node("Upgrades") as Upgrades
 	var ids: Dictionary = {}
 	for resource in reward_pool:
 		var reward := resource as Reward
@@ -36,6 +37,8 @@ func prepare_room(room: GeneratedRoom, player: CharacterBody2D) -> bool:
 		if not offer_all_worlds and reward.world != "common" and reward.world != active_world:
 			continue
 		if reward.kind == Reward.Kind.UPGRADE and reward.upgrade_scene == null:
+			continue
+		if reward.kind == Reward.Kind.UPGRADE and not upgrades.can_equip(reward.reward_id):
 			continue
 		options.append(reward)
 		ids[reward.reward_id] = true
@@ -49,7 +52,6 @@ func prepare_room(room: GeneratedRoom, player: CharacterBody2D) -> bool:
 		surplus.enabled = false
 		surplus.hide()
 		surplus.queue_free()
-	var upgrades := player.get_node("Upgrades") as Upgrades
 	for index in range(room.exit_doors.size()):
 		var portal: Area2D = room.exit_doors[index]
 		var reward: Reward = options[index]
@@ -65,6 +67,28 @@ func unlock_choices() -> void:
 	if not _claimed:
 		_available = true
 		choices_unlocked.emit()
+
+func offered_ids(room: GeneratedRoom) -> Array[String]:
+	var ids: Array[String] = []
+	for portal: Area2D in room.exit_doors:
+		var reward := _offers.get(portal) as Reward
+		ids.append(String(reward.reward_id) if reward != null else "")
+	return ids
+
+func restore_offers(room: GeneratedRoom, player: CharacterBody2D, ids: Array) -> void:
+	var upgrades := player.get_node("Upgrades") as Upgrades
+	for index in range(mini(room.exit_doors.size(), ids.size())):
+		var portal: Area2D = room.exit_doors[index]
+		for resource: Resource in reward_pool:
+			var reward := resource as Reward
+			if reward == null or String(reward.reward_id) != String(ids[index]):
+				continue
+			_offers[portal] = reward
+			_offer_levels[portal] = upgrades.level_of(reward.reward_id) + 1
+			for child in portal.get_children():
+				if child is MarkerScript:
+					child.show_reward(reward, _offer_levels[portal])
+			break
 
 
 func guide_offers() -> Array[Dictionary]:

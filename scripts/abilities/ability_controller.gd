@@ -4,6 +4,7 @@ signal action_activated
 signal action_resolved(success: bool)
 signal action_failed(reason: StringName)
 signal ability_started(ability: Node)
+signal combat_context_changed(room: Node2D, active: bool)
 
 const Ability = preload("res://scripts/abilities/player_ability.gd")
 @export var starting_abilities: Array[PackedScene] = []
@@ -46,7 +47,7 @@ func request_action(trigger: StringName, direction: Vector2) -> void:
 		_reject_action(&"stunned")
 		return
 	for ability in get_children():
-		if ability is Ability and ability.active:
+		if ability is Ability and ability.active and ability.blocks_other_actions:
 			_reject_action(&"busy")
 			return
 	var failure: StringName = &"not_equipped"
@@ -108,15 +109,19 @@ func step(delta: float) -> void:
 
 func shutdown() -> void:
 	disabled = true
+	combat_context_changed.emit(null, false)
 	interrupt()
+
+func set_combat_context(room: Node2D, active: bool) -> void:
+	combat_context_changed.emit(room, active and not disabled)
 
 func _is_stunned() -> bool:
 	var reaction = get_parent().get_node_or_null("HitReaction")
 	return reaction != null and reaction.is_stunned()
 
-func interrupt() -> void:
+func interrupt(include_independent_effects: bool = true) -> void:
 	for ability in get_children():
-		if ability is Ability:
+		if ability is Ability and (include_independent_effects or ability.blocks_other_actions):
 			ability.cancel()
 
 

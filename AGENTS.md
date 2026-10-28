@@ -9,6 +9,8 @@ These instructions apply to the whole repository. Follow them for code, scenes, 
 - Do not use Git or interact with remotes. Do not commit, push, pull, fetch, or change repository history.
 - Preserve the existing scene structure, art direction, assets, and gameplay behavior outside the requested change. Do not replace user-provided art with placeholders or redesign unrelated screens.
 - Keep the implementation focused on the request. Avoid speculative systems, generic frameworks, redundant configuration, and abstractions that do not solve a current need.
+- Character ability guides must lead with visual demonstrations using the character's existing art. Show the complete kit at first glance without scrolling; use short captions and animated gesture-to-action sequences rather than paragraphs or standalone arrow diagrams. Do not add upgrade, inventory, balance, or technical explanations unless requested. Keep character selection separate from optional information access.
+- Ability presentation must show the character physically performing the action, with effects and damage timed to its contact or release. Gesture controls must tolerate imprecise human input and respect the intended aiming stroke. Returning weapons must curve, retain their usefulness around obstacles, and never disappear or immediately recall solely because they touch a wall.
 
 ## Code quality
 

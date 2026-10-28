@@ -16,6 +16,7 @@ const MAP_SETTINGS_PATH := "user://map_selection.cfg"
 @export var stroke_gesture: Node
 
 var active_room: Node2D
+var current_layout: Dictionary = {}
 var _transitioning: bool = false
 var stopped: bool = false
 var _run_started: bool = false
@@ -28,12 +29,12 @@ func _ready() -> void:
 	_load_pieces()
 
 
-func start_run() -> bool:
+func start_run(saved_layout: Dictionary = {}) -> bool:
 	if stopped or _run_started or _transitioning or _assembler.pieces.is_empty():
 		return false
 	_run_started = true
 	_transitioning = true
-	_enter_arena.call_deferred()
+	_enter_arena.call_deferred(null, saved_layout)
 	return true
 
 
@@ -49,7 +50,7 @@ func _on_travel_requested(body: CharacterBody2D, source: Area2D) -> void:
 	_enter_arena.call_deferred(source)
 
 
-func _enter_arena(chosen_exit: Area2D = null) -> void:
+func _enter_arena(chosen_exit: Area2D = null, saved_layout: Dictionary = {}) -> void:
 	if stopped:
 		_transitioning = false
 		_run_started = is_instance_valid(active_room)
@@ -59,7 +60,7 @@ func _enter_arena(chosen_exit: Area2D = null) -> void:
 		_transitioning = false
 		_run_started = is_instance_valid(active_room)
 		return
-	var layout: Dictionary = _assembler.assemble()
+	var layout: Dictionary = saved_layout if not saved_layout.is_empty() else _assembler.assemble()
 	if layout.is_empty():
 		_report_error(_assembler.last_error)
 		_transitioning = false
@@ -98,6 +99,7 @@ func _enter_arena(chosen_exit: Area2D = null) -> void:
 	var previous_room: Node2D = active_room
 	$"../EnemySpawner".reset_encounter()
 	player.get_node("Upgrades").set_combat_context(null, false)
+	player.get_node("Abilities").set_combat_context(null, false)
 	stroke_pad.reset()
 	stroke_gesture.reset()
 	player.get_node("Abilities").interrupt()
@@ -105,6 +107,7 @@ func _enter_arena(chosen_exit: Area2D = null) -> void:
 	player.global_position = next_room.spawn_point.global_position
 	player.reset_physics_interpolation()
 	active_room = next_room
+	current_layout = layout
 	for portal: Area2D in next_room.exit_doors:
 		portal.travel_requested.connect(_on_travel_requested.bind(portal))
 	print("Sala montada: %s [%s], tamanho=%s" % [next_room.layout_name, next_room.layout_id, next_room.generated_size])
